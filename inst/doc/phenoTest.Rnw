@@ -1,0 +1,474 @@
+\documentclass[a4paper,12pt]{article}
+%\VignetteIndexEntry{Manual for the phenoTest library}
+%\VignettePackage{phenoTest,GSEABase}
+
+\usepackage{amsmath}    % need for subequations
+\usepackage{amssymb}    %useful mathematical symbols
+\usepackage{bm}         %needed for bold greek letters and math symbols
+\usepackage{graphicx}   % need for PS figures
+\usepackage{hyperref}   % use for hypertext links, including those to external documents and URLs
+\usepackage{natbib}    %number and author-year style referencing
+
+\begin{document}
+
+\title{Test association between phenotype and gene expression}
+\author{Evarist Planet \\
+\small{Bioinformatics \& Biostatistics Unit} \\
+\small{IRB Barcelona}}
+\date{}  %comment to include current date
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+\label{sec:intro}
+
+Imagine a situation where we have gene expression and phenotype
+variables and we want to test the association of each gene with
+phenotype. We would probably be interested in testing association of 
+groups of genes (or gene sets) with phenotype. This library provides
+the tools to do both things in a way that is efficient, structured,
+fast and scalable. We also provide tools to do \emph{GSEA} (Gene set
+enrichment analysis) of all phenotype variables at once.
+
+The functions and methods presented on this \texttt{vignette} provide
+tools to easily test association between gene expression levels of
+individual genes or gene sets of genes and the selected phenotypes of
+a given gene expression dataset. These can be particularly useful for
+datasets arising from RNAseq or microarray gene expression studies. 
+
+We will load the \texttt{ExpressionSet} of a cohort (\emph{GSE2034})
+we downloaded from \href{http://www.ncbi.nlm.nih.gov/geo/}{GEO}. 
+
+\begin{scriptsize}
+<<loadLibAndData>>=
+options(width=100)
+library(phenoTest)
+data(eset)
+eset
+@ 
+\end{scriptsize}
+
+For illustration purposes we selected the first 1000 genes and the
+first 100 samples, created a continuous variable (named
+\emph{Tumor.size}) and added a new category to the categorical
+variable \emph{lymph.node.status} to illustrate the functionality of
+the package.
+
+\begin{scriptsize}
+<<preprocess>>=
+Tumor.size <- rnorm(ncol(eset),50,2)
+pData(eset) <- cbind(pData(eset),Tumor.size)
+pData(eset)[1:20,'lymph.node.status'] <- 'positive'
+@
+\end{scriptsize}
+
+\section{Individual gene(s) association with phenotype(s)}
+\label{sec:Preprocess}
+
+\subsection{Creating an \texttt{epheno}}
+
+The \texttt{epheno} object will contain the univariate association between a list of phenotype 
+variables and the gene expression from the given \texttt{ExpressionSet}. 
+We will use the \texttt{ExpressionPhenoTest} function to create the \texttt{epheno} object.
+We will have to tell this function which phenotype variables we want to test and the type of
+these variables (if they are \emph{ordinal}, \emph{continuous}, \emph{categorical} or \emph{survival}
+variables). For this purpose we will create a variable called (for instance) \texttt{vars2test}. 
+This variable has to be of class \texttt{list} with components \emph{continuous}, \emph{categorical}, 
+\emph{ordinal} and \emph{survival} indicating which phenotype variables should be tested. \emph{continuous},
+\emph{categorical} and \emph{ordinal} must be character vectors, \emph{survival} a matrix with columns
+named \emph{time} and \emph{event}. The names must match names in \texttt{names(pData(eset))} (being
+\texttt{eset} the \texttt{ExpressionSet} of the cohort we are interested in).
+
+
+\begin{scriptsize}
+<<setVars2test>>=
+head(pData(eset))
+survival <- matrix(c("Relapse","Months2Relapse"),ncol=2,byrow=TRUE)
+colnames(survival) <- c('event','time')
+vars2test <- list(survival=survival,categorical='lymph.node.status',continuous='Tumor.size')
+vars2test
+@ 
+\end{scriptsize}
+  
+Now we have everything we need to create the \texttt{epheno} object:
+
+\begin{scriptsize}
+<<runExpressionPhenoTest>>=
+epheno <- ExpressionPhenoTest(eset,vars2test,p.adjust.method='none')
+epheno
+@ 
+\end{scriptsize}
+  
+P values can also be adjusted afterwards:
+
+\begin{scriptsize}
+<<pValueAdjust>>=
+p.adjust.method(epheno)
+epheno <- pAdjust(epheno,method='BH')
+p.adjust.method(epheno)
+@ 
+\end{scriptsize}
+  
+The \texttt{epheno} object extends the \texttt{ExpressionSet} object and therefore methods that are
+available for \texttt{ExpressionSet}s are also available for \texttt{epheno}s.
+
+The effect of both \emph{continuous}, \emph{categorical} and \emph{ordinal} phenotype variables on gene
+expression levels are tested via \texttt{lmFit} from package \texttt{limma} (\cite{smyth:2005}). For
+\emph{ordinal} variables a single coefficient is used to test its effect on gene expression (trend
+test), which is then used to obtain a P-value. Gene expression effects on \emph{survival} are tested
+via Cox proportional hazards model (\cite{cox:1972}), as implemented in function \texttt{coxph} from
+package \texttt{survival}.
+
+\texttt{ExpressionPhenoTest} implements parallel computing via the function \texttt{mclapply} from
+the package \texttt{multicore}. Currently \texttt{multicore} only operates on Unix systems. If you
+are a windows user you should set \texttt{mc.cores}=1 (the default).
+
+\subsection{Useful methods for the \texttt{epheno} object}
+
+Some of the methods for the epheno objects are shown here.
+
+The object can be subseted by phenotype names:
+
+\begin{scriptsize}
+<<ephenoSubsetByName>>=
+phenoNames(epheno)
+epheno[,'Tumor.size']
+epheno[,2]
+epheno[,c(FALSE,FALSE,TRUE)]
+@ 
+\end{scriptsize}
+  
+or by class (class can be ordinal, continuous, categorical or survival):
+
+\begin{scriptsize}
+<<ephenoSubsetByClass>>=
+phenoClass(epheno)
+epheno[,phenoClass(epheno)=='survival']
+@ 
+\end{scriptsize}
+  
+\texttt{epheno} objects contain information summarizing the association between genes and
+phenotypes. \texttt{getMeans} can be used to obtain the average expression for each group in
+categorical and ordinal variables, as well as for categorized version of the continuous variables.
+
+\begin{scriptsize}
+<<ephenoGetMeans>>=
+head(getMeans(epheno))
+@ 
+\end{scriptsize}
+
+Here we see that tumor size has been categorized into 3 groups. The
+number of categories can be changed with the argument
+\texttt{continuousCategories} in the call to
+\texttt{ExpressionPhenoTest}. 
+
+\texttt{epheno} objects also contain fold changes and hazard ratios (for survival variables). These
+can be accessed with \texttt{getSummaryDif}, \texttt{getFc} and \texttt{getHr}.
+
+\begin{scriptsize}
+<<ephenoGetSummaries>>=
+head(getSummaryDif(epheno))
+head(getFc(epheno))
+head(getHr(epheno))
+@ 
+\end{scriptsize}
+
+\texttt{ExpressionPhenoTest} also computes P-values. \texttt{eBayes} from \texttt{limma} package is
+used for continuous, categorical and ordinal phenotypes. A Cox proportional hazards likelihood-ratio
+test is used for survival phenotypes. P-values can be accessed with \texttt{getPvals}. Notice that a
+single P-value is reported for each phenotype variable. For categorical variables these corresponds
+to the overall null hypothesis that there are no differences between groups.
+
+\begin{scriptsize}
+<<ephenoGetPvals>>=
+head(getPvals(epheno))
+@ 
+\end{scriptsize}
+
+We can also ask for the variables we sent to the \texttt{ExpressionPhenoTest} function:
+
+\begin{scriptsize}
+<<ephenoGetVars2test>>=
+getVars2test(epheno)
+@ 
+\end{scriptsize}
+
+\subsection{Export an \texttt{epheno}}
+
+Functions \texttt{export2csv} and \texttt{epheno2html} can be used to export to a comma separated value
+(csv) or an html file. The html file will have useful links to online databases that will provide information
+about each known gene. For more information about how to use these functions and examples read their help manuals.
+
+\section{Gene set(s) association with phenotype(s)}
+
+Gene sets can be stored in a list object. Each element of the list will contain one gene set.
+The names of the list will be the names of the gene sets. Here we select genes at random to build our
+gene sets:
+
+\begin{scriptsize}
+<<getSignatures>>=
+sign1 <- featureNames(eset)[100:160]
+sign2 <- featureNames(eset)[300:320]
+mySignature <- list(sign1,sign2)
+names(mySignature) <- c('My first signature','Another signature')
+mySignature
+@ 
+\end{scriptsize}
+
+Gene sets can also be stored in gene set collection objects. From here
+on all functions have methods for gene sets stored as \texttt{list}s,
+\texttt{GeneSet}s or \texttt{GeneSetCollection}s. You can use the one
+you feel more confortable with. We will work with
+\texttt{GeneSetCollection}:
+
+\begin{scriptsize}
+<<makeGeneSets>>=
+library(GSEABase)
+myGeneSetA <- GeneSet(geneIds=sign1, setName='My first signature')
+myGeneSetB <- GeneSet(geneIds=sign2, setName='Another signature')
+mySignature <- GeneSetCollection(myGeneSetA,myGeneSetB)
+mySignature
+@ 
+\end{scriptsize}
+
+\subsection{Plots that use \texttt{epheno} as input}
+
+\texttt{barplotSignifSignatures} will plot the percentage of
+up regulated and down regulated genes that are statistically
+significant in each signature. In our random selection of genes we did
+not find any statistically significant genes. Therefore, and just to
+show the plot we set the alpha value 0.85. The plot can be seen in
+Figure \ref{fig:barplotSignifSignatures}.  
+
+\begin{scriptsize}
+\setkeys{Gin}{width=0.6\textwidth}
+<<label=barplotSignifSignatures,include=FALSE>>=
+barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.85)
+@                                                                                                                                               
+\begin{figure}
+\begin{center}
+<<label=barplotSignifSignatures,fig=TRUE,echo=FALSE>>=
+<<barplotSignifSignatures>>
+@                                                                                                                                               
+\end{center}
+\caption{\texttt{barplotSignifSignatures}: Number of diferentially
+  expressed genes in each gene set that are statistically
+  significant. P-values test for differences in each signature between
+  the number of up and down regulated genes.}
+\label{fig:barplotSignifSignatures}
+\end{figure}
+\end{scriptsize}
+
+By default \texttt{barplotSignifSignatures} performs a binomial test
+(\texttt{binom.test} from package \texttt{stats}) for each signature
+to test if the proportions of up regulated and down regulated genes
+are different.
+For example, Figure \ref{fig:barplotSignifSignatures} indicates that in the
+first signature the proportion of up regulated genes is higher than
+the proportion of down regulated genes. The second signature shows no
+significant statistical differences.
+
+Sometimes we want to compare the proportions of up and down regulated
+genes in our signature with the proportions of up and down regulated
+of all genes in the genome. In this case we may provide a reference
+signature via the argument \texttt{referenceSignature}. When providing the
+\texttt{referenceSignature} argument a chi-square test comparing the
+proportion of up and down regulated genes in each signature with the 
+proportion in the reference set will be computed.
+
+When a reference gene set is provided and parameter
+\texttt{testUpDown} is \texttt{TRUE} (by default it is \texttt{FALSE})
+the proportion of up regulated genes is compared with those of the
+reference gene set. The same is done for down regulated genes.
+
+\texttt{barplotSignatures} plots the average log2 fold change or
+hazard ratio of each phenotype for each gene set. Figure
+\ref{fig:barplotSignatures} shows an example of it.
+
+\begin{scriptsize}
+\setkeys{Gin}{width=0.6\textwidth} 
+<<label=barplotSignatures,include=FALSE>>=
+barplotSignatures(epheno[,'Tumor.size'],mySignature)
+@ 
+\begin{figure}
+\begin{center}
+<<label=barplotSignatures,fig=TRUE,echo=FALSE>>=
+<<barplotSignatures>>
+@                                                                                                                                                     
+\end{center}
+\caption{\texttt{barplotSignatures}: Averge fold change or hazard ratio.}
+\label{fig:barplotSignatures}
+\end{figure}
+\end{scriptsize}
+
+We can also cluster our samples in two clusters based on the expression levels of one gene set of genes and
+then test the effect of cluster on phenotypes. For \emph{ordinal} and
+\emph{continuous} variables a Kruskal-Wallis Rank Sum test is used, for \emph{categorical} variables
+a chi-square test is used and for \emph{survival} variables a Cox proportional hazards likelihood-ratio
+test is used. The \texttt{heatmapPhenoTest} function can be used to this end. Its results can be seen
+in Figure \ref{fig:heatmap} and \ref{fig:kaplan}. 
+
+\begin{scriptsize}
+\setkeys{Gin}{width=0.6\textwidth} 
+<<label=heatmapPhenoTestHeat,include=FALSE>>=
+pvals <- heatmapPhenoTest(eset,mySignature[[1]],vars2test=vars2test,heat.kaplan='heat')
+@ 
+
+\begin{scriptsize}
+<<heatmapPhenoTestHeatPvals>>=
+pvals
+@ 
+\end{scriptsize}
+
+\begin{figure}
+\begin{center}
+<<label=heatmapPhenoTestHeat,fig=TRUE,echo=FALSE>>=
+<<heatmapPhenoTestHeat>>
+@                                                                                                                                                     
+\end{center}
+\caption{Heatmap produced with \texttt{heatmapPhenoTest} function. All
+  variables in \texttt{vars2test} that are of class \emph{logical}
+  will be plotted under the heatmap.} 
+\label{fig:heatmap}
+\end{figure}
+\end{scriptsize}
+
+\begin{scriptsize}
+\setkeys{Gin}{width=0.6\textwidth} 
+<<label=heatmapPhenoTestKaplan,include=FALSE>>=
+pvals <- heatmapPhenoTest(eset,mySignature[[1]],vars2test=vars2test,heat.kaplan='kaplan')
+@ 
+
+\begin{scriptsize}
+<<heatmapPhenoTestKaplanPvals>>=
+pvals
+@ 
+\end{scriptsize}
+
+\begin{figure}
+\begin{center}
+<<label=heatmapPhenoTest2,fig=TRUE,echo=FALSE>>=
+<<heatmapPhenoTestKaplan>>
+@                                                                                                                                                     
+\end{center}
+\caption{Kaplan-Meier produced with \texttt{heatmapPhenoTest} function.}
+\label{fig:kaplan}
+\end{figure}
+\end{scriptsize}
+
+\subsection{GSEA (Gene Set Enrichment Analysis)}
+
+A popular way to test association between gene sets' gene expression and phenotype is GSEA (\cite{subramanian:2005}).
+The main idea is to test the association between the gene set \emph{as a whole} and a phenotype.
+
+Although GSEA and several extensions are already available in other \emph{Biconductor} packages,
+here we implement a slightly different extension. Most GSEA-like approaches assess statistical
+significance by permuting the values of the phenotype of interest. From a statisticall point of view
+this tests the null hypothesis that no genes are associated with phenotype. However in many
+applications one is actually interested in testing if the proportion of genes associated with
+phenotype in the gene set is greater than that outside of the gene set. As a simple example, imagine
+a cancer study where 25\% of the genes are differentially expressed. In this setup a randomly chosen
+gene set will have around 25\% of differentially expressed genes, and classical GSEA-like approaches
+will tend to flag the gene set as statistically significant. In contrast, our implementation will
+tend to select only gene sets with more than 25\% of differentially expressed genes.
+
+On a first step we will use the \texttt{gseaSignatures} method to compute \emph{enrichment scores}
+(see \cite{subramanian:2005} for details about the enrichment scores) and \emph{simulated enrichment
+  scores} (by permuting the selection of genes). The \emph{simulated enrichment scores} will be used
+to compute P-values and FDR by the \texttt{gseaSignificance} method. We can summarize the results
+obtained using the \texttt{summary} method. The following chunk of code is an illustrative example
+of it: 
+
+\begin{scriptsize}
+<<gsea>>=
+set.seed('777')
+my.gseaSignatures <- gseaSignatures(x=epheno,signatures=mySignature,B=100)
+my.gseaSignatures
+my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
+my.gseaSignificance
+my.summary <- summary(my.gseaSignificance)
+my.summary
+@ 
+\end{scriptsize}
+
+We can produce plots as follows:
+
+\begin{scriptsize}
+<<gseaPlot>>=
+plot(my.gseaSignatures,my.gseaSignificance)
+@ 
+\end{scriptsize}
+
+This will produce two plots (one for \emph{enrichment score} and another for \emph{normalised enrichment
+score}) for every phenotype and gene set (in our case 12 plots). Following code shows an example on
+plotting only \emph{enrichment score} for variable \emph{Relapse} on the first gene set of genes. Plot
+can be seen in Figure \ref{fig:plotGsea}.
+
+\begin{scriptsize}
+<<label=plotGseaPrepare,include=FALSE>>=
+my.gseaSignatures <- gseaSignatures(x=epheno[,'Relapse'],signatures=mySignature[1],B=100)
+my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
+summary(my.gseaSignificance)
+@ 
+<<label=plotGseaEs,include=FALSE>>=
+plot(my.gseaSignatures,my.gseaSignificance,es.nes='es')  
+@ 
+\begin{figure}
+\begin{center}
+<<label=plotGsea,fig=TRUE,echo=FALSE>>=
+<<plotGseaEs>>
+@                                                                                                                                                     
+\end{center}
+\caption{GSEA plot.}
+\label{fig:plotGsea}
+\end{figure}
+\end{scriptsize}
+
+\texttt{gseaSignatures} can be used not only with \texttt{epheno} objects but also with objects of class \texttt{numeric}
+or \texttt{matrix}. For more information read the \texttt{gseaSignatures} function help.
+
+Following similar ideas to \cite{virtaneva:2001} we also implemented a
+Wilcoxon test. This can be used instead of the permutation test which
+can be slow if we use a lot of permutations and we can not use the
+\texttt{multicore} package. The plot we will obtain will also be
+different. Instead of plotting the \emph{enrichment scores} we will
+plot the density function and the mean log2 fold change or hazard
+ratio of the genes that belong to our gene set. This will allow us to
+compare how similar/different from 0 the mean of our gene set is. The
+plot using Wilcoxon test can be seen in Figure
+\ref{fig:plotGseaWilcox}.  
+
+\begin{scriptsize}
+<<plotGseaWilcoxPrepare>>=
+my.gseaSignatures <- gseaSignatures(x=epheno[,'Relapse'],signatures=mySignature[1],B=100,test='wilcox')
+my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
+summary(my.gseaSignificance)
+@
+<<label=plotGseaWilcox,include=FALSE>>=
+plot(my.gseaSignatures,my.gseaSignificance)  
+@ 
+\begin{figure}
+\begin{center}
+<<label=plotGseaWilcox,fig=TRUE,echo=FALSE>>=
+<<plotGseaWilcox>>
+@                                                                                                                                                     
+\end{center}
+\caption{GSEA plot using Wilcoxon test.}
+\label{fig:plotGseaWilcox}
+\end{figure}
+\end{scriptsize}
+
+Notice that using a Wilcoxon test is conceptually very similar to the average gene set fold change
+presented in figure \ref{fig:barplotSignatures}.
+
+A current limitation of \texttt{gseaSignatures} is that it does not consider the existance of
+dependence between genes in the gene set. This will be addressed in future versions. Nevertheless we
+believe \texttt{gseaSignatures} is usefull in that it targets the correct null hypothesis that gene
+set is as enriched as a randomly selected gene set, opposed to testing that there are no enriched
+genes in the set as is done in GSEA.
+
+\bibliographystyle{plainnat}
+\bibliography{references} 
+
+\end{document}
