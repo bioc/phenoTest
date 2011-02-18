@@ -11,9 +11,9 @@ GSEA-like plot.
 It computes the enrichment scores and simulated enrichment scores for
 each variable and signature. The output will usually be used as input
 for the \code{gseaSignificance} function.
-The \code{get.es}, \code{get.es.sim} and \code{get.fc.hr} methods can be
-used to acces each subobject. For more information please visit the man
-pages of each method.
+The \code{getEs}, \code{getEsSim}, \code{getFc}, \code{getHr} and
+\code{getFcHr} methods can be used to acces each subobject. For more
+information please visit the man pages of each method.
 }
 \usage{
 gseaSignatures(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm')

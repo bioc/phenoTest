@@ -7,6 +7,7 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE) {
   if (averageRepeats) {
     x <- tapply(x,names(x),mean)
   }
+  x <- x[complete.cases(x)]
   x <- x[order(x,decreasing=TRUE)]
   if (logScale) x <- ifelse(x==0,0,log(abs(x)) * sign(x)) else x <- ifelse(x==0,0,x)
   return(x)

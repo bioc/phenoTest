@@ -249,6 +249,7 @@ cat('\n')
 
 phenoName <- c(phenoName,colnames(allpvals))
 phenoClass <- c(phenoClass,phenoClass.pval)
+if (class(allpvals)=='numeric') allpvals <- t(as.matrix(allpvals))
 phenoType <- c(phenoType,rep('pval',ncol(allpvals)))
 meanLabel <- c(meanLabel,rep(NA,ncol(allpvals)))
 survTime <-  c(survTime,rep(NA,ncol(allpvals)))

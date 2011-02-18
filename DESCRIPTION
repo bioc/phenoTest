@@ -8,9 +8,8 @@ Maintainer: Evarist Planet <evarist.planet@irbbarcelona.org>
 Description: Tools to test correlation between gene expression and phenotype.
 License: GPL (>=2)
 Depends: R (>= 2.9.0), Biobase, methods, annotate, Heatplus
-Imports: survival, limma, Hmisc, gplots, Category, AnnotationDbi, hopach, biomaRt, GSEABase, genefilter, xtable, annotate
+Imports: survival, limma, Hmisc, gplots, Category, AnnotationDbi, hopach, biomaRt, GSEABase, genefilter, xtable, annotate, HTSanalyzeR
 Suggests: GSEABase
 Enhances: multicore
 LazyLoad: yes
 biocViews: Microarray, Bioinformatics, DifferentialExpression, MultipleComparisons, Clustering, Classification
-
