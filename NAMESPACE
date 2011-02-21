@@ -31,5 +31,3 @@ importFrom(limma, contrasts.fit, eBayes, lmFit)
 importFrom(survival, Surv, coxph, survfit, pspline)
 
 importFrom(xtable,xtable)
-
-importFrom(HTSanalyzeR, GOGeneSets, KeggGeneSets)
