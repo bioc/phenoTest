@@ -1,4 +1,5 @@
 VERSION 0.99.3
+-Number of permutations in the GSEA of the vignette has been increased from 100 to 1000.
 -ExpressionPhenoTest did not take into account the case when the given ExpressionSet has only one gene.
 -Before doing GSEA remove values that are not complete cases (NAs, NULLs, etc).
 -Some of the functions that apperaed in gseaSignatures documentation had been renamed.

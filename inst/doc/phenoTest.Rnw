@@ -383,7 +383,7 @@ of it:
 \begin{scriptsize}
 <<gsea>>=
 set.seed('777')
-my.gseaSignatures <- gseaSignatures(x=epheno,signatures=mySignature,B=100)
+my.gseaSignatures <- gseaSignatures(x=epheno,signatures=mySignature,B=1000)
 my.gseaSignatures
 my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
 my.gseaSignificance
