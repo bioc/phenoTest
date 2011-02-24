@@ -80,7 +80,7 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
   #
   getEsScore <- function(es) {
     escore <- range(es)
-    escore <- escore[abs(escore)==max(abs(escore))]
+    escore <- escore[abs(escore)==max(abs(escore))][1]
   }
   gseaSignificance <- function(es,es.sim,pval.comp.method,pval.smooth.tail) {
     getNes <- function(escore,es.sim) {
