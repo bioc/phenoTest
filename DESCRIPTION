@@ -1,7 +1,7 @@
 Package: phenoTest
 Type: Package
 Title: Tools to test correlation between gene expression and phenotype.
-Version: 0.99.3
+Version: 1.0.0
 Date: 2010-04-28
 Author: Evarist Planet
 Maintainer: Evarist Planet <evarist.planet@irbbarcelona.org>
