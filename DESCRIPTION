@@ -1,14 +1,14 @@
 Package: phenoTest
 Type: Package
 Title: Tools to test correlation between gene expression and phenotype.
-Version: 1.1.0
+Version: 1.0.1
 Date: 2010-04-28
 Author: Evarist Planet
 Maintainer: Evarist Planet <evarist.planet@irbbarcelona.org>
-Description: Tools to test correlation between gene expression and phenotype.
+Description: Tools to test correlation between gene expression and phenotype in a way that is efficient, structured, fast and scalable. GSEA is also provided.
 License: GPL (>=2)
-Depends: R (>= 2.9.0), Biobase, methods, annotate, Heatplus
-Imports: survival, limma, Hmisc, gplots, Category, AnnotationDbi, hopach, biomaRt, GSEABase, genefilter, xtable, annotate
+Depends: R (>= 2.12.0), Biobase, methods, annotate, Heatplus
+Imports: survival, limma, Hmisc, gplots, Category, AnnotationDbi, hopach, biomaRt, GSEABase, genefilter, xtable, annotate, mgcv, SNPchip, hgu133a.db
 Suggests: GSEABase
 Enhances: multicore
 LazyLoad: yes

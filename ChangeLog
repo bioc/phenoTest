@@ -1,19 +1,7 @@
-VERSION 0.99.3
--In gseaSignatures when selecting the max(abs(escore)) more than one could be selected. Now the first one is used.
--Number of permutations in the GSEA of the vignette has been increased from 100 to 1000.
--ExpressionPhenoTest did not take into account the case when the given ExpressionSet has only one gene.
--Before doing GSEA remove values that are not complete cases (NAs, NULLs, etc).
--Some of the functions that apperaed in gseaSignatures documentation had been renamed.
-VERSION 0.99.2
--Remove require(pkg) from functions because packages were already loaded from NAMESPACE.
--Cahnged GPL license from GPLV1 to GPLv2
--pspline package has been removed from requires (at DESCRIPTION)
--A bunch of packages has been moved from requires to imports (at DESCRIPTION) and the required functions have been added to NAMESPACE.
--GSEABase has been set to Suggests (at DESCRIPTION) to enable Viggnette to use it.
--Meaningful labels were set in vignette chunks of code.
-VERSION 0.99.1
--man page added for all methods.
--Remove commented C code.
--fors where removed and applies where used instead. 
-VERSION 0.99.0 
+VERSION 1.0.1
+-findCopyNumber has been added to package. This function is very similar to ACE. Finds regions with copy number variation.
+-GSEA's wilcoxon plot did not take into account signatures with only one gene.
+-Wilcoxon test implemented in GSEA now accounts for a gene set's mean to be different from 0 and from all genes' mean value.
+-When running GSEA with a non-centered score big gene sets may produce problems. The software accounts for the maximum number of genes allowed in a gene set. If some gene set is bigger than that number wilcoxon test is used instead of permutation test.
+VERSION 1.0.0
 -First stable version.

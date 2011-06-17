@@ -7,10 +7,21 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE) {
   if (averageRepeats) {
     x <- tapply(x,names(x),mean)
   }
-  x <- x[complete.cases(x)]
+  x <- x[complete.cases(x) & sign(x)!=0]
+  x <- x[!is.na(as.character(names(x)))]
   x <- x[order(x,decreasing=TRUE)]
-  if (logScale) x <- ifelse(x==0,0,log(abs(x)) * sign(x)) else x <- ifelse(x==0,0,x)
+  if (logScale) x <- ifelse(x==0,0,log(abs(x)) * sign(x)) #else x <- ifelse(x==0,0,x)
   return(x)
+}
+
+selSignatures <- function(x,signatures) {
+  sel <- unlist(lapply(signatures,function(y) any(y %in% names(x))))
+  if (any(sel)) {
+    signatures <- signatures[sel]
+  } else {
+    stop('No genes of the provided signatures are in names(x).')
+  }
+  return(signatures)
 }
 
 getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
@@ -34,9 +45,9 @@ getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
     return(ans)
   }
   getEs <- function(x,s) {
-    r <- rank(x,ties.method = "random")
-    if (sum(s)==0) stop('None of the elements of the signature was found in featureNames(x). Check that chip model of the signature and x are the same.')
-    es <- .Call('getEs',x,as.integer(which(s)))
+    r <- rank(x,ties.method = "random")    
+#    if (sum(s)==0) stop('None of the elements of the signature was found in featureNames(x). Check that chip model of the signature and x are the same.')
+      es <- .Call('getEs',x,as.integer(which(s)))
 #    es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
     return(es)
 }
@@ -82,30 +93,35 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
     escore <- range(es)
     escore <- escore[abs(escore)==max(abs(escore))][1]
   }
-  gseaSignificance <- function(es,es.sim,pval.comp.method,pval.smooth.tail) {
+  gseaSignificance <- function(es,es.sim,fchr.avg,pval.comp.method,pval.smooth.tail) {
     getNes <- function(escore,es.sim) {
       if (any(sign(es.sim)==sign(escore))) {
         ms <- abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
         nes <- escore / ms
       } else {
-        warning('No simulations with the same sign as ES where obtained. NES could not be computed!')
         nes <- NA
       }
       return(nes)
     }
-    getEsPval <- function(escore,es.sim,pval.comp.method,pval.smooth.tail) {
+    getEsPval <- function(escore,es.sim,fchr.avg,pval.comp.method,pval.smooth.tail) {
       if (pval.comp.method=='original') {
         if (sum(sign(es.sim)==sign(escore))>1) {
-          es.sim.sign <- abs(es.sim[sign(es.sim)==sign(escore)])
-          if (pval.smooth.tail) {
-            myDens <- density(es.sim.sign,from=0,to=max(abs(escore),es.sim.sign)*2,n=2056)
-            myFun <- approxfun(myDens$x,myDens$y)
-            mypval <- (1 - (integrate(myFun,0,abs(escore))$value / integrate(myFun,0,max(abs(escore),es.sim.sign)*2)$value))
+          if (sign(fchr.avg)!=sign(escore)) {
+            mypval <- 1
           } else {
-            mypval <- sum(abs(es.sim.sign) > abs(escore)) / length(es.sim.sign)
+            es.sim.sign <- abs(es.sim[sign(es.sim)==sign(escore)])
+            if (pval.smooth.tail) {
+              myDens <- density(es.sim.sign,from=0,to=max(abs(escore),es.sim.sign)*2,n=2056)
+              myFun <- approxfun(myDens$x,myDens$y)
+              mypval <- try((1 - (integrate(myFun,0,abs(escore))$value / integrate(myFun,0,max(abs(escore),es.sim.sign)*2)$value)),silent=TRUE)
+              if (inherits(mypval, "try-error")) {
+                mypval <- NA
+              }
+            } else {
+              mypval <- sum(abs(es.sim.sign) > abs(escore)) / length(es.sim.sign)
+            }
           }
         } else {
-          warning('No simulations with the same sign as ES where obtained. es.pval could not be computed!')
           mypval <- NA
         }
       } else if (pval.comp.method=='signed') {
@@ -128,16 +144,24 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
       mypval <- ifelse(mypval<0,0,ifelse(mypval>1,1,mypval))
       return(mypval)
     }
-    getNesPval <- function(nes,pval.comp.method,pval.smooth.tail) { # nes.sim has been computed in getNesSim function
+    getNesPval <- function(nes,fchr.avg,pval.comp.method,pval.smooth.tail) { # nes.sim has been computed in getNesSim function
       if (!is.na(nes)) {
         if (pval.comp.method=='original') {
-          nes.sim.sign <- abs(nes.sim[sign(nes.sim)==sign(nes)])
-          if (pval.smooth.tail) {
-            myDens <- density(nes.sim.sign,from=0,to=max(abs(nes),nes.sim.sign)*2,n=2^13)
-            myFun <- approxfun(myDens$x,myDens$y)
-            mypval <- (1 - (integrate(myFun,0,abs(nes))$value / integrate(myFun,0,max(abs(nes),nes.sim.sign)*2)$value))
+          if (sum(sign(nes.sim)==sign(nes))>1) {
+            if (sign(fchr.avg)!=sign(escore)) {
+              mypval <- 1
+            } else {
+              nes.sim.sign <- abs(nes.sim[sign(nes.sim)==sign(nes)])
+              if (pval.smooth.tail) {
+                myDens <- density(nes.sim.sign,from=0,to=max(abs(nes),nes.sim.sign)*2,n=2^13)
+                myFun <- approxfun(myDens$x,myDens$y)
+                mypval <- (1 - (integrate(myFun,0,abs(nes))$value / integrate(myFun,0,max(abs(nes),nes.sim.sign)*2)$value))
+              } else {
+                mypval <- sum(abs(nes.sim.sign) > abs(nes)) / length(nes.sim.sign)
+              }
+            }
           } else {
-            mypval <- sum(abs(nes.sim.sign) > abs(nes)) / length(nes.sim.sign)
+            mypval <- NA
           }
         } else if (pval.comp.method=='signed') {
           if (pval.smooth.tail) {
@@ -164,8 +188,8 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
     }
     escore <- getEsScore(es)
     nes <- getNes(escore,es.sim)
-    pval.nes <- getNesPval(nes,pval.comp.method,pval.smooth.tail)
-    pval.es <- getEsPval(escore,es.sim,pval.comp.method,pval.smooth.tail)
+    pval.nes <- getNesPval(nes,fchr.avg,pval.comp.method,pval.smooth.tail)
+    pval.es <- getEsPval(escore,es.sim,fchr.avg,pval.comp.method,pval.smooth.tail)
     return(data.frame(es=escore,nes=nes,pval.es=pval.es,pval.nes=pval.nes))
   }
   getFdr <- function(nes,pval.nes) {
@@ -183,7 +207,8 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
 #      pval <- mapply(function(x,y) wilcox.test(x[y],x[-y])$p.value,x=es,y=signatures)
 #      pval <- mapply(function(x,y) wilcox.test(x[y],mu=0)$p.value,x=fchr,y=signatures)
       escore <- unlist(lapply(signatures,function(x) log2(mean(2^fchr[x]))))
-      pval <- unlist(lapply(signatures,function(x) wilcox.test(fchr[x],mu=0)$p.value))
+      fchr.avg <- mean(fchr)
+      pval <- unlist(lapply(signatures,function(x) max(c(wilcox.test(fchr[x],mu=0)$p.value,wilcox.test(fchr[x],mu=fchr.avg)$p.value))))
     } else if (test=='ttperm') {    
       myttperm <- function(x,y) {
         perm <- ttperm(matrix(x,nrow=1),factor(1:length(x) %in% y),B=1000)
@@ -200,7 +225,9 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
     ans <- cbind(es=escore,pval)
     if (p.adjust.method!='none') ans[,'pval'] <- p.adjust(as.numeric(ans[,'pval']),p.adjust.method)
   } else {
-    ans <- mapply(function(x,y) gseaSignificance(x,y,pval.comp.method,pval.smooth.tail),x=es,y=es.sim)
+    fchr.avg <- lapply(signatures,function(x) mean(fchr[x]))    
+    ans <- mapply(function(x,y,z) gseaSignificance(x,y,z,pval.comp.method,pval.smooth.tail),x=es,y=es.sim,z=fchr.avg)
+    if (class(ans)=='list') ans <- do.call(cbind,ans) #this line solves an error that appears on windows Windows Server 2003 R2 (32-bit) / x64 
     ans.tmp <- matrix(as.numeric(ans),ncol=ncol(ans)); colnames(ans.tmp) <- colnames(ans); rownames(ans.tmp) <- rownames(ans); ans <- ans.tmp
     fdr <- getFdr(ans['nes',],ans['pval.nes',])
     ans <- rbind(ans,fdr=fdr)
@@ -228,9 +255,13 @@ plotGSEA <- function(es.nes,fc.hr,s,mainTitle='',variable='',pvalfdr,p.adjust.me
     axis(2)
   }
   plot1.wilcox <- function(fc.hr,s,mainTitle) {
-    xlim <- range(density(fc.hr[s])$x)[c(2,1)] #we invert the plot to show negatives first (like broad's gsea)
-    ylim <- range(density(fc.hr[s])$y)
-    plot(density(fc.hr[s]),xlim=xlim,ylim=ylim,col=3,main=mainTitle)
+    if (sum(s)>1) {
+      xlim <- range(density(fc.hr[s])$x)[c(2,1)] #we invert the plot to show negatives first (like broad's gsea)
+      ylim <- range(density(fc.hr[s])$y)
+      plot(density(fc.hr[s]),xlim=xlim,ylim=ylim,col=3,main=mainTitle) 
+    } else {
+      plot(fc.hr[s],1,col=0)
+    }
     abline(v=mean(fc.hr[s]),lty=2,col=3); abline(v=0,col=1,lty=2)
   }
   plot2 <- function(x,varLabel) {
@@ -310,7 +341,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
             nes <- es / abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
             plotGSEA(es.nes=nes,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=y[[1]][i,][['fdr']],p.adjust.method=y[[2]],EsOrNes='NES',es.nes.ylim=nes.ylim,test=test)
           } else {
-            warning('No simulations with the same sign as ES where obtained. NES could not be computed!')
+            warning('Too few simulations with the same sign as ES where obtained in some signature(s). NAs will be assigned to nes.')
           }
         }
       }
@@ -361,8 +392,24 @@ setGeneric("getFcHr",function (x) standardGeneric("getFcHr"))
 setMethod("gseaSignatures",signature(x="numeric",signatures="list"),
  function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
   x <- preProcessX(x,logScale=logScale,absVals=absVals,averageRepeats=averageRepeats)
-  B <- ceiling(B/length(signatures))
-  ans <- lapply(signatures,function(y) getSourceData(x=x,s=y,B=B,mc.cores=mc.cores))
+  signatures <- selSignatures(x,signatures)
+  if (test=='perm') {
+    numPerm <- ceiling(B/length(signatures))
+    if (numPerm<50) { #check that each gene set has minimum number of permutations
+      warning('You are using less than 50 permutations per gene set. Results will be very inaccurate. You should increse the number of permutations!\n')
+    } else {
+      cat(paste(length(signatures),'gene sets were provided and',B,'permutations where assigned.',numPerm,'permutations will be computed on each gene set.\n'))
+    }
+    signatures.len <- unlist(lapply(signatures,length)); names(signatures.len) <- names(signatures)
+    probNotCentered <- (1-pnorm(0,mean(x),sd(x) * sqrt((1/signatures.len) * (1-signatures.len/length(x)) * (length(x)/(length(x)-1)))))
+    if (any(probNotCentered>0.99)) { #check if x is centered
+      maxSigLen <- sum(1-pnorm(0,mean(x),sd(x) * sqrt((1/(1:length(x))) * (1-(1:length(x))/length(x)) * (length(x)/(length(x)-1)))) < 0.99)
+      cat('Some gene sets are too big to compute permutation tests. Wilcoxon test will be used instead.\n')
+      cat('Remove gene sets with more than',maxSigLen,'genes and run again to use permutation tests.\n')    
+      test <- 'wilcox'
+    }
+  }
+  ans <- lapply(signatures,function(y) getSourceData(x=x,s=y,B=numPerm,mc.cores=mc.cores,test=test))
   ans <- new("gseaSignaturesSign",list(es.esSim=new("gseaSignatures",ans),fc.hr=x,signatures=signatures,test=test))
   return(ans)
  }
@@ -509,6 +556,7 @@ setMethod("gseaSignificance",signature(x="gseaSignaturesSign"),
   test <- x[['test']]
   fchr <- x[['fc.hr']]
   ans <- getSummary(es,es.sim,fchr,p.adjust.method=p.adjust.method,pval.comp.method,pval.smooth.tail,signatures,test)
+  if (any(is.na(ans))) warning('Some NAs where produced due to not having enough simulations with the same sign as the observed ES.')
   return(new("gseaSignificanceSign",list(summary=as.matrix(ans),p.adjust.method=p.adjust.method)))
  }
 )
@@ -562,6 +610,7 @@ plot.gseaSignaturesSign <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='
     es.ylim <- c(-es.abs.max,es.abs.max)
   }
   test <- x['test']
+  if (test!='perm') es.nes <- 'es'
   if (missing(nes.ylim) & missing(test)) {
     nes.abs.max <- max(abs(summary(gseaSignificance)[,'nes']),na.rm=TRUE)
     nes.ylim <- c(-nes.abs.max,nes.abs.max)

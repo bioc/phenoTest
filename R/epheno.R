@@ -16,7 +16,7 @@ mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt) {
   },silent=TRUE)
   if (inherits(val, "try-error")) {
     summaryDif <- NA; pval <- NA
-    warning('Some errors happened analyzing survival vars. NAs where produced.')
+#    warning('Some errors happened analyzing survival vars. NAs where produced.')
   }
   return(list(summaryDif,pval))
 }
@@ -263,7 +263,7 @@ pdata$survTime <- as.factor(pdata$survTime)
 
 rownames(pdata) <- c(colnames(allsummaryDif),colnames(allpvals))
 pdata <- new('AnnotatedDataFrame',pdata)
-ans <- new('epheno',exprs=cbind(allsummaryDif,allpvals),phenoData=pdata,annotation=annotation(x))
+ans <- new('epheno',exprs=as.matrix(cbind(allsummaryDif,allpvals)),phenoData=pdata,annotation=annotation(x))
 ans@p.adjust.method <- p.adjust.method
 
 return(ans)

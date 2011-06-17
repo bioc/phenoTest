@@ -8,6 +8,7 @@
 \alias{p.adjust.method}
 \alias{phenoClass}
 \alias{phenoNames}
+\alias{[,epheno,ANY,ANY,ANY-method}
 \docType{data}
 \title{
 Getters for the epheno object:

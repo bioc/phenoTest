@@ -95,7 +95,7 @@ colnames(addvar) <- paste(colnames(addvar),pvals)
 sel <- sapply(addvar,function(x) any(x==TRUE)) #select only logic, or 0/1 variables
 if (any(!sel)) {
   warning(paste('The following variables in vars2test will not be ploted because they are not of type logic: ',paste(varlabels[!sel],collapse=', '),sep=''))
-  addvar <- addvar[,sel,drop=FALSE]
+  addvar <- addvar[,sel & !is.na(sel),drop=FALSE]
 }
 eset4plot <- exprs(x); colnames(eset4plot) <- NULL
 if (nrow(eset4plot)>100) rownames(eset4plot) <- NULL

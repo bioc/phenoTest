@@ -2,7 +2,7 @@ useDynLib(phenoTest)
 
 importClassesFrom(Biobase, ExpressionSet, eSet, VersionedBiobase, Versioned)
 
-export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign, plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest, ClusterPhenoTest, htmlpage, smoothCoxph)
+export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign, plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest, ClusterPhenoTest, htmlpage, smoothCoxph, getEsPositions, findCopyNumber, genesInArea)
 
 exportClasses("epheno","gseaSignatures","gseaSignaturesSign","gseaSignaturesVar","gseaSignificanceSign","gseaSignificanceVar")
 
@@ -31,3 +31,9 @@ importFrom(limma, contrasts.fit, eBayes, lmFit)
 importFrom(survival, Surv, coxph, survfit, pspline)
 
 importFrom(xtable,xtable)
+
+importFrom(mgcv,gam)
+
+importFrom(SNPchip,plotCytoband)
+
+importFrom(hgu133a.db, hgu133aCHR, hgu133aCHRLOC, hgu133aCHRLOCEND)

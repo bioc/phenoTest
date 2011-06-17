@@ -92,18 +92,18 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
     if (id.entrezid) {
       tmp <- entrezid.anotation(featureNames(x),homol.symbol=homol.symbol,homol.genename=homol.genename)
       if (varType=='survival') {
-        xout <- data.frame(entrezid=featureNames(x),tmp,getSummaryDif(epheno),p.value=as.numeric(getPvals(epheno)))
+        xout <- data.frame(entrezid=featureNames(x),tmp,getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
       } else {
-        xout <- data.frame(entrezid=featureNames(x),tmp,getMeans(epheno),getSummaryDif(epheno),p.value=as.numeric(getPvals(epheno)))
+        xout <- data.frame(entrezid=featureNames(x),tmp,getMeans(epheno)[featureNames(x),,drop=FALSE],getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
       }
     } else {
       entrezid <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"ENTREZID", sep = "")),ifnotfound=NA))
       symbol <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"SYMBOL", sep = "")),ifnotfound=NA))
       genename <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"GENENAME", sep = "")),ifnotfound=NA))
       if (varType=='survival') {
-        xout <- data.frame(probeid=featureNames(x),entrezid,symbol,genename,getSummaryDif(epheno),p.value=as.numeric(getPvals(epheno)))
+        xout <- data.frame(probeid=featureNames(x),entrezid,symbol,genename,getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
       } else {
-        xout <- data.frame(probeid=featureNames(x),entrezid,symbol,genename,getMeans(epheno),getSummaryDif(epheno),p.value=as.numeric(getPvals(epheno)))
+        xout <- data.frame(probeid=featureNames(x),entrezid,symbol,genename,getMeans(epheno)[featureNames(x),,drop=FALSE],getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
       }
     }
     xout <- xout[order(xout$p.value),]
