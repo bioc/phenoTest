@@ -341,7 +341,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
             nes <- es / abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
             plotGSEA(es.nes=nes,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=y[[1]][i,][['fdr']],p.adjust.method=y[[2]],EsOrNes='NES',es.nes.ylim=nes.ylim,test=test)
           } else {
-            warning('Too few simulations with the same sign as ES where obtained in some signature(s). NAs will be assigned to nes.')
+            warning('Too few simulations with the same sign as ES were obtained in some signature(s). NAs will be assigned to nes.')
           }
         }
       }
@@ -366,7 +366,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
             nes <- es / abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
             plotGSEA(es.nes=nes,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=y[[1]][,'fdr'][[1]],p.adjust.method=y[[2]],EsOrNes='NES',es.nes.ylim=nes.ylim,test=test)
           } else {
-            warning('No simulations with the same sign as ES where obtained. NES could not be computed!')
+            warning('No simulations with the same sign as ES were obtained. NES could not be computed!')
           }
         }
       }
@@ -398,7 +398,7 @@ setMethod("gseaSignatures",signature(x="numeric",signatures="list"),
     if (numPerm<50) { #check that each gene set has minimum number of permutations
       warning('You are using less than 50 permutations per gene set. Results will be very inaccurate. You should increse the number of permutations!\n')
     } else {
-      cat(paste(length(signatures),'gene sets were provided and',B,'permutations where assigned.',numPerm,'permutations will be computed on each gene set.\n'))
+      cat(paste(length(signatures),'gene sets were provided and',B,'permutations were assigned.',numPerm,'permutations will be computed on each gene set.\n'))
     }
     signatures.len <- unlist(lapply(signatures,length)); names(signatures.len) <- names(signatures)
     probNotCentered <- (1-pnorm(0,mean(x),sd(x) * sqrt((1/signatures.len) * (1-signatures.len/length(x)) * (length(x)/(length(x)-1)))))
@@ -556,7 +556,7 @@ setMethod("gseaSignificance",signature(x="gseaSignaturesSign"),
   test <- x[['test']]
   fchr <- x[['fc.hr']]
   ans <- getSummary(es,es.sim,fchr,p.adjust.method=p.adjust.method,pval.comp.method,pval.smooth.tail,signatures,test)
-  if (any(is.na(ans))) warning('Some NAs where produced due to not having enough simulations with the same sign as the observed ES.')
+  if (any(is.na(ans))) warning('Some NAs were produced due to not having enough simulations with the same sign as the observed ES.')
   return(new("gseaSignificanceSign",list(summary=as.matrix(ans),p.adjust.method=p.adjust.method)))
  }
 )

@@ -16,7 +16,7 @@ mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt) {
   },silent=TRUE)
   if (inherits(val, "try-error")) {
     summaryDif <- NA; pval <- NA
-#    warning('Some errors happened analyzing survival vars. NAs where produced.')
+#    warning('Some errors happened analyzing survival vars. NAs were produced.')
   }
   return(list(summaryDif,pval))
 }
