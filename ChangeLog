@@ -1,3 +1,5 @@
+VERSION 1.1.1
+- Fixed bug in ExpressionPhenoTest which caused to incorrectly compute P-values when adjustment variables were specified and the variable of interest was categorical or ordinal
 VERSION 1.0.1
 -findCopyNumber has been added to package. This function is very similar to ACE. Finds regions with copy number variation.
 -GSEA's wilcoxon plot did not take into account signatures with only one gene.

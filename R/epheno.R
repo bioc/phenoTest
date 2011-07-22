@@ -136,7 +136,7 @@ if (!is.null(vars2test$ordinal)) {
     design <- model.matrix(~ -1 + as.factor(pData(x)[colsel,vars2test$ordinal[i]]))
     colnames(design) <- levels(factor(pData(x)[,vars2test$ordinal[i]]))
     lm1 <- lmFit(x[,colsel],design=design) #to get means
-    mycontrasts <- rbind(rep(-1,ncol(design)-1),diag(ncol(design)-1))
+    mycontrasts <- rbind(rep(-1,nlevels(tmpVar)-1),diag(nlevels(tmpVar)-1),matrix(0,nrow=ncol(design)-nlevels(tmpVar),ncol=nlevels(tmpVar)-1))
     lm2 <- contrasts.fit(lm1,contrasts=mycontrasts) #to get fc
     design4p <- model.matrix(~ as.numeric(as.factor(pData(x)[colsel,vars2test$ordinal[i]])))
     lm4p <- lmFit(x[,colsel],design=design4p) 
@@ -191,7 +191,7 @@ if (!is.null(vars2test$categorical)) {
     }
     design <- model.matrix(eval(parse(text=myFormula)))
     lm1 <- lmFit(x[,colsel],design=design) #select arrays in the design matrix (e.g. NAs excluded)
-    mycontrasts <- rbind(rep(-1,ncol(design)-1),diag(ncol(design)-1))
+    mycontrasts <- rbind(rep(-1,nlevels(tmpVar)-1),diag(nlevels(tmpVar)-1),matrix(0,nrow=ncol(design)-nlevels(tmpVar),ncol=nlevels(tmpVar)-1))
     eb <- eBayes(contrasts.fit(lm1,contrasts=mycontrasts))
     tmpCoef <- coef(lm1)[,1:(length(levels(tmpVar)))]
     colnames(tmpCoef) <- paste(vars2test$categorical[i],levels(tmpVar),sep='.')

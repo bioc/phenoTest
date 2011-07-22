@@ -2,7 +2,7 @@ useDynLib(phenoTest)
 
 importClassesFrom(Biobase, ExpressionSet, eSet, VersionedBiobase, Versioned)
 
-export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign, plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest, ClusterPhenoTest, htmlpage, smoothCoxph, getEsPositions, findCopyNumber, genesInArea)
+export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign, plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest, ClusterPhenoTest, htmlpage, smoothCoxph)
 
 exportClasses("epheno","gseaSignatures","gseaSignaturesSign","gseaSignaturesVar","gseaSignificanceSign","gseaSignificanceVar")
 

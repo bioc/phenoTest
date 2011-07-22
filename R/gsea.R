@@ -47,7 +47,7 @@ getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
   getEs <- function(x,s) {
     r <- rank(x,ties.method = "random")    
 #    if (sum(s)==0) stop('None of the elements of the signature was found in featureNames(x). Check that chip model of the signature and x are the same.')
-      es <- .Call('getEs',x,as.integer(which(s)))
+      es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest')
 #    es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
     return(es)
 }
@@ -55,7 +55,7 @@ getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
     myFun1 <- function(dummy) { return(which(sample(s,replace=FALSE))) }
 #    myFun1 <- function(dummy) { return(sample(s,replace=FALSE)) } #this line can be used instead of the previous one if we want to use R instead of C
     myFun2 <- function(s.rand) {
-      ans <- .Call('getEs',x,as.integer(s.rand))
+      ans <- .Call('getEs',x,as.integer(s.rand),PACKAGE='phenoTest')
 #      ans <- enrichmentScore(x,s.rand) #this line can be used instead of the previous one if we want to use R instead of C
       ans <- ans[abs(ans)==max(abs(ans))]
       return(ans)
