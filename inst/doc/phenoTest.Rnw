@@ -2,6 +2,7 @@
 %\VignetteIndexEntry{Manual for the phenoTest library}
 %\VignettePackage{phenoTest,GSEABase}
 
+
 \usepackage{amsmath}    % need for subequations
 \usepackage{amssymb}    %useful mathematical symbols
 \usepackage{bm}         %needed for bold greek letters and math symbols
