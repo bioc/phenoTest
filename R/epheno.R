@@ -416,7 +416,7 @@ if (is.null(fData(x))) {
 } else {
   ans <- data.frame(fData(x), getMeans(x), getSummaryDif(x), pvals)
 }
-write.csv(ans, file=file, ...)
+write.csv(ans, file=file, row.names=row.names, ...)
 }
 )
 
