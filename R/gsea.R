@@ -90,7 +90,7 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
   nes.sim <- unlist(lapply(es.sim,getNesSim))
   #
   getEsScore <- function(es) {
-    escore <- range(es)
+    escore <- range(es,na.rm=TRUE)
     escore <- escore[abs(escore)==max(abs(escore))][1]
   }
   gseaSignificance <- function(es,es.sim,fchr.avg,pval.comp.method,pval.smooth.tail) {
