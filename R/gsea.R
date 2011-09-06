@@ -105,7 +105,7 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
     }
     getEsPval <- function(escore,es.sim,fchr.avg,pval.comp.method,pval.smooth.tail) {
       if (pval.comp.method=='original') {
-        if (sum(sign(es.sim)==sign(escore))>1) {
+        if (sum(sign(es.sim)==sign(escore),na.rm=TRUE)>1) {
           if (sign(fchr.avg)!=sign(escore)) {
             mypval <- 1
           } else {
@@ -147,7 +147,7 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
     getNesPval <- function(nes,fchr.avg,pval.comp.method,pval.smooth.tail) { # nes.sim has been computed in getNesSim function
       if (!is.na(nes)) {
         if (pval.comp.method=='original') {
-          if (sum(sign(nes.sim)==sign(nes))>1) {
+          if (sum(sign(nes.sim)==sign(nes),na.rm=TRUE)>1) {
             if (sign(fchr.avg)!=sign(escore)) {
               mypval <- 1
             } else {
