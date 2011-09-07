@@ -9,7 +9,6 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE) {
   }
   x <- x[complete.cases(x) & sign(x)!=0]
   x <- x[!is.na(as.character(names(x)))]
-  x <- x[order(x,decreasing=TRUE)]
   if (logScale) x <- ifelse(x==0,0,log(abs(x)) * sign(x)) #else x <- ifelse(x==0,0,x)
   return(x)
 }
@@ -35,17 +34,7 @@ getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
     ans <- p.hit-p.miss
     return(ans)
   }
-  enrichmentScore <- function(x,s) {
-    nr <- sum(abs(x[s]))
-    p.hit <- cumsum(ifelse(s,abs(x)/nr,0))
-    n <- length(x)
-    n.h <- sum(s)
-    p.miss <- cumsum(ifelse(s,0,1/(n-n.h)))
-    ans <- p.hit-p.miss
-    return(ans)
-  }
   getEs <- function(x,s) {
-    r <- rank(x,ties.method = "random")    
 #    if (sum(s)==0) stop('None of the elements of the signature was found in featureNames(x). Check that chip model of the signature and x are the same.')
       es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest')
 #    es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
@@ -266,6 +255,7 @@ plotGSEA <- function(es.nes,fc.hr,s,mainTitle='',variable='',pvalfdr,p.adjust.me
   }
   plot2 <- function(x,varLabel) {
     par(mar=c(1,4,1,1))
+    x <- sort(x,decreasing=TRUE)
     myDat <- approx(1:length(x),x,n=300)
     plot(myDat$x,myDat$y,type='l',axes=FALSE,ylim=c(-1*max(abs(x)),max(abs(x))),ylab=paste(varLabel,'(log)'),xlab=''); abline(h=0); axis(2)
     if (any(myDat$y<0)) {
@@ -322,13 +312,13 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
   if (class(z)=='list') {
     gsl <- x[[1]]
     for (i in 1:length(z)) {
+      es <- gsl[[i]][['es']]
+      es.sim <- gsl[[i]][['es.sim']]
+      fc.hr <- x[[2]]
+      s <- names(fc.hr) %in% z[[i]]      
+      myTitle <- paste(ifelse(missing(variable),'',paste('variable:',variable,' / ',sep='')),'signature:', names(z)[i],sep='')
       if (es.nes %in% c('es','both')) {
         #es plot
-        es <- gsl[[i]][['es']]
-        es.sim <- gsl[[i]][['es.sim']]
-        fc.hr <- x[[2]]
-        s <- names(fc.hr) %in% z[[i]]
-        myTitle <- paste(ifelse(missing(variable),'',paste('variable:',variable,' / ',sep='')),'signature:', names(z)[i],sep='')
         if (test!='perm') pvalfdr <- summary(y)[i,'pval'] else pvalfdr <- y[[1]][i,][['pval.es']]
         plotGSEA(es.nes=es,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=pvalfdr,p.adjust.method=y[[2]],EsOrNes='ES',es.nes.ylim=es.ylim,test=test)
       }
