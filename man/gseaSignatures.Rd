@@ -11,6 +11,10 @@ GSEA-like plot.
 It computes the enrichment scores and simulated enrichment scores for
 each variable and signature. The output will usually be used as input
 for the \code{gseaSignificance} function.
+An important parameter of the function is \code{logScale}. Its default
+value is TRUE which means that by default the provided scores (i.e. fold
+changes, hazard ratios) will be log scaled. Remember to change this
+parameter to FALSE if your scores are already log scaled.
 The \code{getEs}, \code{getEsSim}, \code{getFc}, \code{getHr} and
 \code{getFcHr} methods can be used to acces each subobject. For more
 information please visit the man pages of each method.
@@ -37,6 +41,12 @@ gseaSignatures(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1
   one) and 'ttperm' stands for permutation t test.}
 }
 \details{
+The following preprocessing was done on the provided scores (i.e. fold changes, hazard
+ratios) to avoid errors during the enrichment score computation:
+-When having two scores with the same name its average was used.
+-Zeros were removed.
+-Scores without names (which can not be in any signature) removed. 
+-Non complete cases (i.e. NAs, NaNs) were removed.
 ES score was calculated for each signature and variable (see
 references). If parameter \code{test} is 'perm' the signature was
 permutted and the ES score was recalculated (this happened B times for
@@ -46,7 +56,7 @@ that the average value of the genes that do belong to our signtaure is
 different from the average value of the genes that do not belong to our
 signature will be performed.
 If \code{test} is 'ttperm' a permutation t-test will be used.
-Take into account that the final plot will be different when a 'wilcox' is used.
+Take into account that the final plot will be different when 'wilcox' is used.
 }
 \references{
 Aravind Subramanian, (October 25, 2005) \emph{Gene Set Enrichment Analysis}. 
