@@ -209,8 +209,9 @@ gene sets:
 
 \begin{scriptsize}
 <<getSignatures>>=
-sign1 <- featureNames(eset)[100:160]
-sign2 <- featureNames(eset)[300:320]
+set.seed(777)
+sign1 <- sample(featureNames(eset))[1:20]
+sign2 <- sample(featureNames(eset))[1:50]
 mySignature <- list(sign1,sign2)
 names(mySignature) <- c('My first signature','Another signature')
 mySignature
@@ -239,13 +240,13 @@ mySignature
 up regulated and down regulated genes that are statistically
 significant in each signature. In our random selection of genes we did
 not find any statistically significant genes. Therefore, and just to
-show the plot we set the alpha value 0.85. The plot can be seen in
+show the plot we set the alpha value 0.99. The plot can be seen in
 Figure \ref{fig:barplotSignifSignatures}.  
 
 \begin{scriptsize}
 \setkeys{Gin}{width=0.6\textwidth}
 <<label=barplotSignifSignatures,include=FALSE>>=
-barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.85)
+barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.99)
 @                                                                                                                                               
 \begin{figure}
 \begin{center}
@@ -382,9 +383,15 @@ obtained using the \texttt{summary} method. The following chunk of code is an il
 of it: 
 
 \begin{scriptsize}
-<<gsea>>=
-set.seed('777')
+<<gseaSignatures>>=
 my.gseaSignatures <- gseaSignatures(x=epheno,signatures=mySignature,B=1000)
+@ 
+\end{scriptsize}
+
+We receive one message for each phenotype we are testing.
+
+\begin{scriptsize}
+<<gseaSignificance>>=
 my.gseaSignatures
 my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
 my.gseaSignificance

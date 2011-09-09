@@ -388,7 +388,7 @@ setMethod("gseaSignatures",signature(x="numeric",signatures="list"),
     if (numPerm<50) { #check that each gene set has minimum number of permutations
       warning('You are using less than 50 permutations per gene set. Results will be very inaccurate. You should increse the number of permutations!\n')
     } else {
-      cat(paste(length(signatures),'gene sets were provided and',B,'permutations were assigned.',numPerm,'permutations will be computed on each gene set.\n'))
+      cat(paste(length(signatures),'gene sets were provided and',B,'permutations were assigned,\n therefore ',numPerm,'permutations will be computed on each gene set.\n'))
     }
     signatures.len <- unlist(lapply(signatures,length)); names(signatures.len) <- names(signatures)
     probNotCentered <- (1-pnorm(0,mean(x),sd(x) * sqrt((1/signatures.len) * (1-signatures.len/length(x)) * (length(x)/(length(x)-1)))))
@@ -518,7 +518,7 @@ setMethod("show",signature(object="gseaSignaturesSign"),
   function (object) {
     cat("Object of class 'gseaSignaturesSign'\n")
     cat("You can use the getEs, getEsSim and getFcHr methods to easily acces its data\n")
-    cat("-The tested signatures are:",names(object[[1]]),'\n')
+    cat("-The tested signatures are:\n ",names(object[[1]]),'\n')
   }
 )
 
@@ -526,8 +526,8 @@ setMethod("show",signature(object="gseaSignaturesVar"),
   function (object) {
     cat("Object of class 'gseaSignaturesVar'\n")
     cat("You can use the getEs, getEsSim and getFcHr methods to easily acces its data\n")
-    cat("-The tested variables are:",names(object),'\n')
-    cat("-The tested signatures (for each variable) are:",names(object[[1]][[1]]),'\n')
+    cat("-The tested variables are:\n ",names(object),'\n')
+    cat("-The tested signatures (for each variable) are\n :",names(object[[1]][[1]]),'\n')
   }
 )
 
@@ -574,7 +574,7 @@ setMethod("show",signature(object="gseaSignificanceSign"),
   function (object) {
     cat("Object of class 'gseaSignificanceSign'\n")
     cat("You can use the summary method to easily acces its data\n")
-    cat("-The tested signatures are:",rownames(object[[1]]),'\n')
+    cat("-The tested signatures are:\n",rownames(object[[1]]),'\n')
     cat("-P adjust method:",object[[2]],'\n')
   }
 )
@@ -583,8 +583,8 @@ setMethod("show",signature(object="gseaSignificanceVar"),
   function (object) {
     cat("Object of class 'gseaSignificanceVar'\n")
     cat("You can use the summary method to easily acces its data\n")
-    cat("-The tested variables are:",names(object),'\n')
-    cat("-The tested signatures (for each variable) are:",rownames(object[[1]][[1]]),'\n')
+    cat("-The tested variables are:\n",names(object),'\n')
+    cat("-The tested signatures (for each variable) are:\n",rownames(object[[1]][[1]]),'\n')
     cat("-P adjust method:",object[[1]][[2]],'\n')
   }
 )
