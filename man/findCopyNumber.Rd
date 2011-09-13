@@ -145,7 +145,7 @@ data(epheno)
 phenoNames(epheno)
 mypos <- getEsPositions(epheno,'Relapse')
 head(mypos)
-#regions <- findCopyNumber(mypos)
+regions <- findCopyNumber(mypos)
 #head(regions)
 }
 \keyword{ ~kwd1 }
