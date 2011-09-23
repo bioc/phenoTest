@@ -157,8 +157,8 @@ getIndivPvals <- function(obs.pred,sim.pred,p.adjust.method='BY',mc.cores=mc.cor
   pvals
 }
 
-getRegions <- function(x,pvals,minGenes,pvalcutoff=0.01) {
-  myrle <- rle(pvals<pvalcutoff)
+getRegions <- function(x,pvals,minGenes,pvalcutoff=0.01,obs.pred,exprScorecutoff=NA) {
+  if (is.na(exprScorecutoff)) myrle <- rle(pvals<pvalcutoff) else myrle <- rle(pvals<pvalcutoff & abs(as.numeric(obs.pred))>exprScorecutoff)
   start <- c(names(pvals[1]),names(myrle$lengths[-length(myrle$lengths)]))
   end <- names(myrle$values) 
   tmp <- cbind(start,end)[myrle$values & myrle$lengths>minGenes,]
@@ -210,7 +210,7 @@ qcPlot <- function(ids,x,B,sim.pred,minGenes=10) {
   dev.off()
 }
 
-findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0.05,mc.cores=1,useAllPerm=F,genome='hg19',chrLengths,sampleGenome=TRUE,useOneChr=FALSE,useIntegrate=TRUE) {
+findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0.05,exprScorecutoff=NA,mc.cores=1,useAllPerm=F,genome='hg19',chrLengths,sampleGenome=TRUE,useOneChr=FALSE,useIntegrate=TRUE) {
   #Input has to be a data frame with gene ids as rownames and 3 columns: es (enrichment score), chr (chromosome) and pos (position in chromosome)
   stopifnot(identical(colnames(x),c('es','chr','pos')))
   #order
@@ -284,8 +284,12 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
   }
   names(pvals) <- rownames(x)
   #get enriched regions
+
+##   i <- ids[[1]]
+##   getRegions(x[x$chr==i,],pvals[x$chr==i],minGenes=minGenes,pvalcutoff=pvalcutoff,obs.pred=obs.pred[[i]],minScore=1)
+  
   cat('Ok\nget enriched regions...')  
-  ssr <- lapply(ids,function(i) getRegions(x[x$chr==i,],pvals[x$chr==i],minGenes=minGenes,pvalcutoff=pvalcutoff))
+  ssr <- lapply(ids,function(i) getRegions(x[x$chr==i,],pvals[x$chr==i],minGenes=minGenes,pvalcutoff=pvalcutoff,obs.pred=obs.pred[[i]],exprScorecutoff=exprScorecutoff))
   #make plot
   cat('Ok\nmake plot...')  
   if (missing(chrLengths)) {

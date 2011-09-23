@@ -9,6 +9,7 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE) {
   }
   x <- x[complete.cases(x) & sign(x)!=0]
   x <- x[!is.na(as.character(names(x)))]
+  x <- x[order(x,decreasing=TRUE)]  
   if (logScale) x <- ifelse(x==0,0,log(abs(x)) * sign(x)) #else x <- ifelse(x==0,0,x)
   return(x)
 }
@@ -35,11 +36,10 @@ getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
     return(ans)
   }
   getEs <- function(x,s) {
-#    if (sum(s)==0) stop('None of the elements of the signature was found in featureNames(x). Check that chip model of the signature and x are the same.')
-      es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest')
-#    es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
+    es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest')
+    #es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
     return(es)
-}
+  }
   getEsSim <- function(x,s,B,mc.cores) {
     myFun1 <- function(dummy) { return(which(sample(s,replace=FALSE))) }
 #    myFun1 <- function(dummy) { return(sample(s,replace=FALSE)) } #this line can be used instead of the previous one if we want to use R instead of C

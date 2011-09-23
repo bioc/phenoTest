@@ -63,6 +63,9 @@ SEXP getEs(SEXP fchr, SEXP sign)
   double *rfchr = REAL(fchr), *res;
   int *rsign = INTEGER(sign);
 
+  PROTECT(fchr = coerceVector(fchr, REALSXP)); 
+  PROTECT(sign = coerceVector(sign, REALSXP));
+
   nfchr = length(fchr);
   nsign = length(sign);
 
@@ -86,6 +89,6 @@ SEXP getEs(SEXP fchr, SEXP sign)
     res[i] = phit[i] - pmiss[i];
     }
 
-  UNPROTECT(1);
+  UNPROTECT(3);
   return es;
 }
