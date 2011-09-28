@@ -12,9 +12,9 @@
 }
 \usage{
 findCopyNumber(x, minGenes = 15, B = 100, p.adjust.method = "BH",
-pvalcutoff = 0.05, mc.cores = 1, useAllPerm = F, genome = "hg19",
-chrLengths, sampleGenome = TRUE, useOneChr = FALSE, useIntegrate =
-TRUE)
+pvalcutoff = 0.05, exprScorecutoff = NA, mc.cores = 1, useAllPerm = F,
+genome = "hg19", chrLengths, sampleGenome = TRUE, useOneChr = FALSE,
+useIntegrate = TRUE)
 }
 \arguments{
   \item{x}{
@@ -43,6 +43,11 @@ TRUE)
   \item{pvalcutoff}{
     All genes with an adjusted p value lower than this parameter will be
     considered enriched.
+  }
+  \item{exprScorecutoff}{
+    Genes with a smoothed score that is not bigger (lower if the given
+    number is negative) than the specified value will not be considered
+    significant.
   }
   \item{mc.cores}{
     Number of cores to be used in the computation. If \code{mc.cores} is
@@ -127,6 +132,10 @@ TRUE)
   statistically significant (pvalue lower than parameter
   \code{pvalcutoff}) after adjusting pvalues with the method specified in
   \code{p.adjust.method} will be selected as enriched.
+  If \code{exprScorecutoff} is different form NA, a gene to be
+  statistically significant will need (aditionally to the pvalue cutoff)
+  to have a smoothed score bigger (lower if \code{exprScorecutoff} is
+  negative) than the specified value.
 }
 \value{
   Plots all chromomes and marks the enriched regions.

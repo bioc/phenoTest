@@ -37,7 +37,7 @@ getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
   }
   getEs <- function(x,s) {
     es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest')
-    #es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
+#    es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
     return(es)
   }
   getEsSim <- function(x,s,B,mc.cores) {

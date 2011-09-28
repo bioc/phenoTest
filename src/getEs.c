@@ -76,11 +76,13 @@ SEXP getEs(SEXP fchr, SEXP sign)
   double nr = getNr(rfchr, rsign, nsign);
 
   double phit[nfchr];
+  double *rphit = calloc(nfchr, sizeof(double));
   populateArray(phit,nfchr);
   getPhit(rfchr, rsign, nsign, nr, phit);
   cumsum(phit, nfchr);
 
   double pmiss[nfchr];
+  double *rpmiss = calloc(nfchr, sizeof(double));
   populateArray(pmiss,nfchr);
   getPmiss(rsign, nfchr, nsign, pmiss);
   cumsum(pmiss, nfchr);
