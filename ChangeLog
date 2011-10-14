@@ -1,4 +1,5 @@
 VERSION 1.1.1
+- Import functions from mgcv library that are required by findCopyNumber.
 - Add getNes method.
 - Allocate vectors of non R variables in C code. This seemed to give problems under windows.
 - When producing the GSEA plot the option to plot only NES did not work.

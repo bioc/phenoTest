@@ -32,7 +32,7 @@ importFrom(survival, Surv, coxph, survfit, pspline)
 
 importFrom(xtable,xtable)
 
-importFrom(mgcv,gam)
+importFrom(mgcv,gam,s)
 
 importFrom(SNPchip,plotCytoband)
 
