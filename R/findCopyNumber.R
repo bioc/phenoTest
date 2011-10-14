@@ -170,7 +170,7 @@ getRegions <- function(x,pvals,minGenes,pvalcutoff=0.01,obs.pred,exprScorecutoff
 plotCopyNumber <- function(es,chr,pos,obs.pred,ssr,es.mean,genome,chrLengths) {
   xlim <- c(0,chrLengths[[chr]])
   chr <- gsub('CHR','',gsub('chr','',gsub('CHR0','',gsub('chr0','',chr))))
-  lenNames <- gsub('CHR','',gsub('chr','',gsub('CHR0','',gsub('chr0','',chrLengths))))
+  lenNames <- gsub('CHR','',gsub('chr','',gsub('CHR0','',gsub('chr0','',names(chrLengths)))))
   plotCyto <- chr %in% lenNames & genome=='hg18' & chr %in% c(as.character(1:22),'X','Y','M')
   if (plotCyto) {
     def.par <- par(no.readonly = TRUE)    

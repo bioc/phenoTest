@@ -1,4 +1,6 @@
 VERSION 1.1.1
+- Add getNes method.
+- Allocate vectors of non R variables in C code. This seemed to give problems under windows.
 - When producing the GSEA plot the option to plot only NES did not work.
 - Fixed bug in export2CSV which caused it to ignore the row.names argument
 - Fixed bug in ExpressionPhenoTest which caused to incorrectly compute P-values when adjustment variables were specified and the variable of interest was categorical or ordinal

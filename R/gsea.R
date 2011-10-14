@@ -377,6 +377,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
 setGeneric("gseaSignatures",function (x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') standardGeneric("gseaSignatures"))
 setGeneric("getEs",function (x) standardGeneric("getEs"))
 setGeneric("getEsSim",function (x) standardGeneric("getEsSim"))
+setGeneric("getNes",function (x) standardGeneric("getNes"))
 setGeneric("getFcHr",function (x) standardGeneric("getFcHr"))
 
 setMethod("gseaSignatures",signature(x="numeric",signatures="list"),
@@ -501,6 +502,28 @@ setMethod("getEsSim",signature(x="gseaSignaturesVar"),
   }
 )
 
+setMethod("getNes",signature(x="gseaSignaturesSign"),
+  function (x) {
+    myFun <- function(es,es.sim) {
+      es.range <- range(es)
+      escore <- es.range[abs(es.range)==max(abs(es.range))]
+      ans <- es / abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
+      ans
+    }
+    ans <- mapply(myFun, es=es,es.sim=es.sim)
+    mynames <- colnames(ans)
+    ans <- split(ans, 1:ncol(ans))
+    names(ans) <- mynames
+    return(ans)
+  }
+)
+
+setMethod("getNes",signature(x="gseaSignaturesVar"),
+  function (x) {
+    ans <- lapply(x,getNes)
+    return(ans)
+  }
+)
 setMethod("getFcHr",signature(x="gseaSignaturesSign"),
   function (x) {
     return(x[['fc.hr']])
