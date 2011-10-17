@@ -14,7 +14,7 @@
 findCopyNumber(x, minGenes = 15, B = 100, p.adjust.method = "BH",
 pvalcutoff = 0.05, exprScorecutoff = NA, mc.cores = 1, useAllPerm = F,
 genome = "hg19", chrLengths, sampleGenome = TRUE, useOneChr = FALSE,
-useIntegrate = TRUE)
+useIntegrate = TRUE,plot=TRUE)
 }
 \arguments{
   \item{x}{
@@ -95,6 +95,9 @@ useIntegrate = TRUE)
     distribution under the null hypothesis, the second assumes it is
     normally distributed.
   }
+  \item{plot}{
+    If FALSE the function will make no plots.
+  }
 }
 \details{
   Enrichemnt scores can be either log fold changes, log hazard ratios, log
@@ -153,9 +156,12 @@ useIntegrate = TRUE)
 data(epheno)
 phenoNames(epheno)
 mypos <- getEsPositions(epheno,'Relapse')
+mypos$chr <- '1' #we set all probes to chr one for illustration purposes
+                 #(we want a minimum number of probes per chromosome) 
 head(mypos)
-#regions <- findCopyNumber(mypos) 
-#head(regions) #no enriched regions were found
+#set.seed(1)
+#regions <- findCopyNumber(mypos,B=10,plot=FALSE) 
+#head(regions)
 }
 \keyword{ ~kwd1 }
 

@@ -210,7 +210,7 @@ qcPlot <- function(ids,x,B,sim.pred,minGenes=10) {
   dev.off()
 }
 
-findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0.05,exprScorecutoff=NA,mc.cores=1,useAllPerm=F,genome='hg19',chrLengths,sampleGenome=TRUE,useOneChr=FALSE,useIntegrate=TRUE) {
+findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0.05,exprScorecutoff=NA,mc.cores=1,useAllPerm=F,genome='hg19',chrLengths,sampleGenome=TRUE,useOneChr=FALSE,useIntegrate=TRUE,plot=TRUE) {
   #Input has to be a data frame with gene ids as rownames and 3 columns: es (enrichment score), chr (chromosome) and pos (position in chromosome)
   stopifnot(identical(colnames(x),c('es','chr','pos')))
   #order
@@ -291,12 +291,14 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
   cat('Ok\nget enriched regions...')  
   ssr <- lapply(ids,function(i) getRegions(x[x$chr==i,],pvals[x$chr==i],minGenes=minGenes,pvalcutoff=pvalcutoff,obs.pred=obs.pred[[i]],exprScorecutoff=exprScorecutoff))
   #make plot
-  cat('Ok\nmake plot...')  
-  if (missing(chrLengths)) {
-    chrLengths <- unlist(as.list(by(x,x$chr,function(x) max(x['pos'],na.rm=T)))) * 1e6
-    chrLengths <- chrLengths[!is.na(chrLengths)]
+  if (plot) {
+    cat('Ok\nmake plot...')  
+    if (missing(chrLengths)) {
+      chrLengths <- unlist(as.list(by(x,x$chr,function(x) max(x['pos'],na.rm=T)))) * 1e6
+      chrLengths <- chrLengths[!is.na(chrLengths)]
+    }
+    lapply(ids,function(i) plotCopyNumber(es=x[x$chr==i,'es'],chr=i,pos=x[x$chr==i,'pos'],obs.pred=obs.pred[[i]],ssr=ssr[[i]],es.mean=mean(x$es),genome=genome,chrLengths=chrLengths))
   }
-  lapply(ids,function(i) plotCopyNumber(es=x[x$chr==i,'es'],chr=i,pos=x[x$chr==i,'pos'],obs.pred=obs.pred[[i]],ssr=ssr[[i]],es.mean=mean(x$es),genome=genome,chrLengths=chrLengths))
   #return regions
   cat('Ok\nreturn regions...')  
   ssr <- ssr[lapply(ssr,nrow)>0]
