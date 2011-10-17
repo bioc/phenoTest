@@ -13,7 +13,7 @@ double absolute(double x)
 void cumsum(double *x, int len)
 {
   int i;
-  for (i = 0; i < len; ++i) {
+  for (i = 1; i < len; ++i) {
     *(x + i) = *(x + i) + *(x + i -1);
   }
 }
@@ -22,19 +22,11 @@ double getNr(double *fchr, int *sign, int signLen)
 {
   int i;
   double nr;
-  nr = 0;
+  nr = 0.0;
   for (i = 0; i < signLen; ++i) {
-    nr = absolute(fchr[sign[i]-1]) + nr;
+    nr = absolute(fchr[sign[i] -1]) + nr;
     }
   return nr;
-}
-
-void populateArray(double *xin, int len)
-{
-  int i;
-  for (i = 0; i < len; ++i) {
-    *(xin + i) = 0.0;
-    }
 }
 
 void getPhit(double *fchr, int *sign, int signLen, double nr, double *phit)
@@ -62,7 +54,7 @@ SEXP getEs(SEXP fchr, SEXP sign)
   int i, nfchr, nsign;
   double *rfchr = REAL(fchr), *res;
   int *rsign = INTEGER(sign);
-
+  
   PROTECT(fchr = coerceVector(fchr, REALSXP)); 
   PROTECT(sign = coerceVector(sign, REALSXP));
 
@@ -75,22 +67,26 @@ SEXP getEs(SEXP fchr, SEXP sign)
 
   double nr = getNr(rfchr, rsign, nsign);
 
-  double phit[nfchr];
-  double *rphit = calloc(nfchr, sizeof(double));
-  populateArray(phit,nfchr);
-  getPhit(rfchr, rsign, nsign, nr, phit);
-  cumsum(phit, nfchr);
+  SEXP phit;
+  PROTECT(phit = allocVector(REALSXP, nfchr));
+  double *rphit;
+  rphit = REAL(phit);
+  for(i = 0; i < nfchr; i++) rphit[i] = 0.0;
+  getPhit(rfchr, rsign, nsign, nr, rphit);
+  cumsum(rphit, nfchr);
 
-  double pmiss[nfchr];
-  double *rpmiss = calloc(nfchr, sizeof(double));
-  populateArray(pmiss,nfchr);
-  getPmiss(rsign, nfchr, nsign, pmiss);
-  cumsum(pmiss, nfchr);
+  SEXP pmiss;
+  PROTECT(pmiss = allocVector(REALSXP, nfchr));
+  double *rpmiss;
+  rpmiss = REAL(pmiss);
+  for(i = 0; i < nfchr; i++) rpmiss[i] = 0.0;
+  getPmiss(rsign, nfchr, nsign, rpmiss);
+  cumsum(rpmiss, nfchr);
 
   for (i = 0; i < nfchr; ++i) {
-    res[i] = phit[i] - pmiss[i];
+    res[i] = rphit[i] - rpmiss[i];
     }
 
-  UNPROTECT(3);
+  UNPROTECT(5);
   return es;
 }
