@@ -297,6 +297,11 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
       chrLengths <- unlist(as.list(by(x,x$chr,function(x) max(x['pos'],na.rm=T)))) * 1e6
       chrLengths <- chrLengths[!is.na(chrLengths)]
     }
+    is.num.ids <- !grepl('[a-zA-Z]',names(ids))
+    ids.num <- names(ids)[is.num.ids][order(as.numeric(names(ids)[is.num.ids]))]
+    ids.chr <- names(ids)[!is.num.ids][order(names(ids)[!is.num.ids])]
+    ids <- ids[c(ids.num,ids.chr)]
+    chrLengths <- chrLengths[c(ids.num,ids.chr)]
     lapply(ids,function(i) plotCopyNumber(es=x[x$chr==i,'es'],chr=i,pos=x[x$chr==i,'pos'],obs.pred=obs.pred[[i]],ssr=ssr[[i]],es.mean=mean(x$es),genome=genome,chrLengths=chrLengths))
   }
   #return regions
