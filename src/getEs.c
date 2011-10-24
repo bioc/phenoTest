@@ -64,6 +64,7 @@ SEXP getEs(SEXP fchr, SEXP sign)
   SEXP es;
   PROTECT(es = allocVector(REALSXP, nfchr));
   res = REAL(es);
+  for(i = 0; i < nfchr; i++) res[i] = 0.0;
 
   double nr = getNr(rfchr, rsign, nsign);
 
