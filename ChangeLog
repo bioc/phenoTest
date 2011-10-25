@@ -1,3 +1,5 @@
+VERSION 1.1.2
+- Use R instead of C when computing enrichment scores.
 VERSION 1.1.1
 - Use R's memory instead of C memory in C code.
 - Import functions from mgcv library that are required by findCopyNumber.

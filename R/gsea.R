@@ -26,26 +26,24 @@ selSignatures <- function(x,signatures) {
 
 getSourceData <- function(x,s,B=1000,mc.cores=1,test='perm') {
   s <- names(x) %in% unique(as.character(s))
-  enrichmentScore <- function(x,s) {
-    nr <- sum(abs(x[s]))
-    p.hit <- cumsum(ifelse(s,abs(x)/nr,0))
-    n <- length(x)
-    n.h <- sum(s)
-    p.miss <- cumsum(ifelse(s,0,1/(n-n.h)))
-    ans <- p.hit-p.miss
-    return(ans)
+  enrichmentScore <- function(fchr,sign) {
+    nfchr <- length(fchr)
+    p <- numeric(nfchr)
+    p[] <- -1 / (nfchr - length(sign))
+    absfchr <- abs(fchr[sign])
+    p[sign] <- absfchr / sum(absfchr)
+    cumsum(p)
   }
   getEs <- function(x,s) {
-    es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest')
-#    es <- enrichmentScore(x,s) #this line can be used instead of the previous one if we want to use R instead of C
+#    es <- .Call('getEs',x,as.integer(which(s)),PACKAGE='phenoTest') #this line can be used instead of the next one to use C instead of R
+    es <- enrichmentScore(x,as.integer(which(s))) 
     return(es)
   }
   getEsSim <- function(x,s,B,mc.cores) {
-    myFun1 <- function(dummy) { return(which(sample(s,replace=FALSE))) }
-#    myFun1 <- function(dummy) { return(sample(s,replace=FALSE)) } #this line can be used instead of the previous one if we want to use R instead of C
+    myFun1 <- function(dummy) { return(which(sample(s,replace=FALSE))) } 
     myFun2 <- function(s.rand) {
-      ans <- .Call('getEs',x,as.integer(s.rand),PACKAGE='phenoTest')
-#      ans <- enrichmentScore(x,s.rand) #this line can be used instead of the previous one if we want to use R instead of C
+#      ans <- .Call('getEs',x,as.integer(s.rand),PACKAGE='phenoTest') #this line can be used instead of the next one to use C instead of R
+      ans <- enrichmentScore(x,as.integer(s.rand))
       ans <- ans[abs(ans)==max(abs(ans))]
       return(ans)
     }
