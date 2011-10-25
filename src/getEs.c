@@ -51,18 +51,20 @@ void getPmiss(int *sign, int fchrLen, int signLen, double *pmiss)
 
 SEXP getEs(SEXP fchr, SEXP sign)
 { 
-  int i, nfchr, nsign;
-  double *rfchr = REAL(fchr), *res;
-  int *rsign = INTEGER(sign);
-  
   PROTECT(fchr = coerceVector(fchr, REALSXP)); 
-  PROTECT(sign = coerceVector(sign, REALSXP));
+  PROTECT(sign = coerceVector(sign, INTSXP));
+
+  double *rfchr = REAL(fchr);
+  int *rsign = INTEGER(sign);
+
+  int i, nfchr, nsign;
 
   nfchr = length(fchr);
   nsign = length(sign);
 
   SEXP es;
   PROTECT(es = allocVector(REALSXP, nfchr));
+  double *res;
   res = REAL(es);
   for(i = 0; i < nfchr; i++) res[i] = 0.0;
 
