@@ -1,4 +1,4 @@
-setClass('epheno',contains='ExpressionSet',representation=representation(p.adjust.method="character"))
+setClass('epheno',contains='ExpressionSet',representation=representation(p.adjust.method="character",approach="character"))
 setValidity("epheno", function(object){
   msg <- NULL
   pd <- pData(object)
@@ -23,3 +23,6 @@ setClass("gseaSignaturesSign",contains="list",representation(gseaSignatures="gse
 setClass("gseaSignaturesVar",contains="list",representation(gseaSignatures="gseaSignaturesSign"))
 setClass("gseaSignificanceSign",contains="list",representation(gseaSignificance="matrix",p.adjust.method="character"))
 setClass("gseaSignificanceVar",contains="list",representation(gseaSignificance="gseaSignificanceSign"))
+#setClass("gseaDataSign",contains="list",representation(gseaSignatures="gseaSignatures",fc.hr="character",s="logical",test='character',gseaSignificance="matrix",p.adjust.method="character"))
+setClass("gseaData",contains="list",representation(gseaSignatures="gseaSignaturesSign",gseaSignificance="gseaSignificanceSign",gsetOrigin='character'))
+

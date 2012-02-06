@@ -6,6 +6,9 @@ Compute ES (enrichment scores) and es.sim (simulated enrichment scores)
 for given phenotipic variable(s) and signature(s).
 }
 \description{
+This function has been deprecated. You could better use \code{gsea}
+instead.
+  
 This function computes the first step in the process of obtaining a
 GSEA-like plot.
 It computes the enrichment scores and simulated enrichment scores for
@@ -20,12 +23,12 @@ The \code{getEs}, \code{getEsSim}, \code{getFc}, \code{getHr} and
 information please visit the man pages of each method.
 }
 \usage{
-gseaSignatures(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm')
+gseaSignatures(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm')
 }
 \arguments{
 \item{x}{ \code{ePhenoTest}, \code{numeric} or \code{matrix} object
   containing hazard ratios or fold changes.}
-\item{signatures}{ character or list object containing the names of the
+\item{gsets}{ character or list object containing the names of the
   genes that belong to each signature.}
 \item{logScale}{ if values should be log scaled.}
 \item{absVals}{ if TRUE fold changes and hazard ratios that are negative

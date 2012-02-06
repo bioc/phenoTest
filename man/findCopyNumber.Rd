@@ -153,15 +153,15 @@ useIntegrate = TRUE,plot=TRUE)
   getEsPositions, genesInArea
 }
 \examples{
-#data(epheno)
-#phenoNames(epheno)
-#mypos <- getEsPositions(epheno,'Relapse')
-#mypos$chr <- '1' #we set all probes to chr one for illustration purposes
-#                 #(we want a minimum number of probes per chromosome) 
-#head(mypos)
-#set.seed(1)
-#regions <- findCopyNumber(mypos,B=10,plot=FALSE) 
-#head(regions)
+data(epheno)
+phenoNames(epheno)
+mypos <- getEsPositions(epheno,'Relapse')
+mypos$chr <- '1' #we set all probes to chr one for illustration purposes
+                 #(we want a minimum number of probes per chromosome) 
+head(mypos)
+set.seed(1)
+regions <- findCopyNumber(mypos,B=10,plot=FALSE) 
+head(regions)
 }
 \keyword{ ~kwd1 }
 

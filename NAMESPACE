@@ -1,12 +1,10 @@
-useDynLib(phenoTest)
-
 importClassesFrom(Biobase, ExpressionSet, eSet, VersionedBiobase, Versioned)
 
-export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign, plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest, ClusterPhenoTest, htmlpage, smoothCoxph, getEsPositions, findCopyNumber, genesInArea)
+export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign, plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest, ClusterPhenoTest, smoothCoxph, getEsPositions, findCopyNumber, genesInArea, gsea, getGo, getKegg, gsea.go, gsea.kegg, summary.gseaData, plot.gseaData, gsea2html, gsea.selVars, gsea.selGsets, eset2genelevel, write.html)
 
 exportClasses("epheno","gseaSignatures","gseaSignaturesSign","gseaSignaturesVar","gseaSignificanceSign","gseaSignificanceVar")
 
-exportMethods(gseaSignatures, gseaSignificance, getEs, getEsSim, getFcHr, dim, phenoNames, p.adjust.method, phenoClass, show, getMeans, getPvals, getSummaryDif, getFc, getHr, logFcHr, export2CSV, "[", barplotSignatures, barplotSignifSignatures, pAdjust, getVars2test)
+exportMethods(gseaSignatures, gseaSignificance, getEs, getEsSim, getFcHr, dim, phenoNames, p.adjust.method, approach, phenoClass, show, getMeans, getPvals, getPostProbs, getSignif, getSummaryDif, getFc, getHr, logFcHr, export2CSV, "[", barplotSignatures, barplotSignifSignatures, pAdjust, getVars2test)
 
 importClassesFrom(GSEABase, GeneSet, GeneSetCollection)
 
@@ -37,3 +35,5 @@ importFrom(mgcv,gam,s)
 importFrom(SNPchip,plotCytoband)
 
 importFrom(hgu133a.db, hgu133aCHR, hgu133aCHRLOC, hgu133aCHRLOCEND)
+
+importFrom(HTSanalyzeR, GOGeneSets, KeggGeneSets)

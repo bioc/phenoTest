@@ -1,3 +1,16 @@
+VERSION 1.3.3
+- htmlpage has been replaced by write.html which is much more versatile.
+- New function eset2genelevel has been added.
+- ExpressionPhenoTest's survival analysis bayesian approach now use's the implementation from BMA package to compute posterior probabilities.
+VERSION 1.3.2
+- Added a function to export gseaData objects to html files with plots and links to online databases.
+- Added functions gsea.selGsets and gsea.selVars to subset gseaData objects.
+- ExpressionPhenoTest now allows to compute posterior probabilities instead of pvalues.
+- Function to easily perform gene set enrichment analysis with gene ontology and kegg databases have been added. Their names are gsea.go and gsea.kegg.
+- Functions to obtain Gene ontolology and Kegg gene sets have been added. Their names are getGo and getKegg.
+- The plot method for gsea objects now alows to plot a selection of gene sets (or one specific gene set). In previous versions it allways ploted all gene sets.
+- The package works with a new object to store gsea data. The object is called gseaData.
+- smoothCoxph function did not calculate the confidence interval's lower bound when values were negative. Now it does. It also adds the possibility to do the calculations using logrisk.
 VERSION 1.1.2
 - Use R instead of C when computing enrichment scores.
 VERSION 1.1.1

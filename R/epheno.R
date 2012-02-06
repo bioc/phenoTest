@@ -4,26 +4,48 @@ rowSD <- function(x,...) { return(sqrt(rowVar(x,...))) }
 #
 # FUNCTION THAT CREATES THE EPHENO OBJECT
 #
-ExpressionPhenoTest <- function (x,vars2test,adjustVars,p.adjust.method='BH',continuousCategories=3,mc.cores=1) {
+ExpressionPhenoTest <- function (x,vars2test,adjustVars,p.adjust.method='BH',continuousCategories=3,mc.cores=1,approach='frequentist') {
 
-mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt) {
+mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach) {
   val <- try({
-    if (adjustVarsTxt=='') myFormula <- "Surv(coxSurvTime, coxSurvEvent) ~ I(as.numeric(x))" else myFormula <- paste("Surv(coxSurvTime, coxSurvEvent) ~ I(as.numeric(x))",adjustVarsTxt,sep=' + ')
+    if (adjustVarsTxt=='') myFormula <- "Surv(coxSurvTime, coxSurvEvent) ~ I(as.numeric(x))" else myFormula <- paste("Surv(coxSurvTime, coxSurvEvent) ~ ",adjustVarsTxt,"I(as.numeric(x))",sep=' + ')
     coxph1 <- coxph(eval(parse(text=myFormula)))
     eCoef <- exp((abs(coef(coxph1)[1])))*sign(coef(coxph1)[1])
     summaryDif <- eCoef
-    pval <- summary(coxph1)$logtest["pvalue"]
+    if (approach=='frequentist') {
+      tmp <- anova(coxph1)
+      signif <- tmp[nrow(tmp),'Pr(>|Chi|)']
+    } else if (approach=='bayesian') {
+      if (adjustVarsTxt=='') {
+        dat <- cbind(myVar=as.numeric(x))
+      } else {
+        dat <- cbind(myVar=as.numeric(x),pData(eset)[,adjustVars])
+      }
+      my.bic.surv <- bic.surv(x=dat, surv.t=coxSurvTime, cens=coxSurvEvent, OR=Inf)
+      signif <- my.bic.surv$postprob[my.bic.surv$label=='myVar']
+    }
   },silent=TRUE)
   if (inherits(val, "try-error")) {
-    summaryDif <- NA; pval <- NA
+    summaryDif <- NA; signif <- NA
 #    warning('Some errors happened analyzing survival vars. NAs were produced.')
   }
-  return(list(summaryDif,pval))
+  return(list(summaryDif,signif))
 }
 
-if (class(x) != 'ExpressionSet') stop('x must be of class ExpressionSet')
-if (!is.numeric(exprs(x))) stop('exprs(x) must be numeric. Maybe it is stored as a data.frame?')
-if (!is.numeric(mc.cores)) stop('mc.cores must be numeric')
+postprobBic <- function(exprs,formula) {
+  bic1 <- BIC(lm(eval(parse(text=gsub('\\+ as.numeric\\(tmpVar\\)','\\+1',gsub('\\+ tmpVar','\\+1',formula))))))
+  bic2 <- BIC(lm(eval(parse(text=formula))))
+  bic <- exp(-0.5 * c(bic1,bic2))
+  ans <- bic[2] / sum(bic)
+  return(ans)
+}
+
+stopifnot(class(x)=='ExpressionSet')
+stopifnot(is.numeric(exprs(x)))
+stopifnot(is.numeric(mc.cores))
+stopifnot(approach %in% c('frequentist','bayesian'))
+
+if (mc.cores!=1 & approach=='bayesian') exprs.list <- by(exprs(x),as.numeric(cut(1:nrow(x),b=mc.cores)),function(x) x,simplify=FALSE)
 
 if (!is.null(vars2test$continuous)) {
   if (sum(vars2test$continuous %in% names(pData(x))) != length(vars2test$continuous)) stop("Invalid variable names in vars2test$continuous")
@@ -50,14 +72,14 @@ if (!missing(adjustVars)) {
   if (!all(adjustVars %in% colnames(pData(x)))) stop('adjustVars is not in colnames(pData(x))')
 }
 
-phenoName <- NULL; phenoClass <- NULL; phenoClass.pval <- NULL; phenoType <- NULL; meanLabel <- NULL; survTime <- NULL
+phenoName <- NULL; phenoClass <- NULL; phenoClass.signif <- NULL; phenoType <- NULL; meanLabel <- NULL; survTime <- NULL
 
-summaryDif <- pval <- vector("list", 4)
-names(summaryDif) <- names(pval) <- c("cont", "categ", "surv", "ordi")
+summaryDif <- signif <- vector("list", 4)
+names(summaryDif) <- names(signif) <- c("cont", "categ", "surv", "ordi")
 if (!is.null(vars2test$continuous)) {
   numContVars <- (continuousCategories*2)-1
   summaryDif$cont <- matrix(NA,nrow=nrow(x),ncol=(length(vars2test$continuous)*numContVars))
-  pval$cont <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$continuous))
+  signif$cont <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$continuous))
 
   #epheno names
   phenoName <- c(phenoName,as.character(sapply(vars2test$continuous, function(x) rep(x,numContVars))))
@@ -65,7 +87,7 @@ if (!is.null(vars2test$continuous)) {
   phenoType <- c(phenoType,as.character(unlist(sapply(vars2test$continuous, function(x) c(rep('mean',continuousCategories),rep('summaryDif',continuousCategories-1))))))
   survTime <- c(survTime,rep(NA,numContVars*length(vars2test$continuous)))
 
-  colnames(pval$cont) <- vars2test$continuous
+  colnames(signif$cont) <- vars2test$continuous
   mynames <- character(0)
   for (i in 1:length(vars2test$continuous)) {
     cat(paste('\nPerforming analysis for continuous variable ',vars2test$continuous[i],' ',sep=''))
@@ -81,7 +103,6 @@ if (!is.null(vars2test$continuous)) {
     design <- model.matrix(eval(parse(text=myFormula)))
     colnames(design)[1:2] <- c('Intercept',vars2test$continuous[i])
     lm1 <- lmFit(x[,colsel],design=design) #select arrays in the design matrix (e.g. NAs excluded)
-    eb <- eBayes(contrasts.fit(lm1,contrasts=c(0,1,rep(0,ncol(design)-2))))
     ncateg <- length(unique(pData(x)[,vars2test$continuous[i]]))
     if (any(is.na(pData(x)[,vars2test$continuous[i]]))) ncateg <- ncateg-1
     if (ncateg>continuousCategories) {
@@ -92,7 +113,7 @@ if (!is.null(vars2test$continuous)) {
 
     #epheno names
     meanLabel <- c(meanLabel,levels(categories),rep(NA,length(levels(categories))-1))
-    phenoClass.pval <- c(phenoClass.pval,'continuous')
+    phenoClass.signif <- c(phenoClass.signif,'continuous')
     
     mynames <- c(mynames,paste(vars2test$continuous[i],levels(categories),sep='.'))
     mynames <- c(mynames,paste(vars2test$continuous[i],'fc',levels(categories)[2:length(levels(categories))],sep='.'))
@@ -101,8 +122,20 @@ if (!is.null(vars2test$continuous)) {
     numitems <- (2*continuousCategories)-1
     sel.fc <- ((i-1)*numContVars+continuousCategories) + 1:(continuousCategories-1)
     summaryDif$cont[,sel.fc] <- t(apply(summaryDif$cont[,sel.mean],1,function(x) 2^(abs(x[-1]-x[1]))*ifelse(x[-1]-x[1]<0,-1,1)))
-    if (length(featureNames(x))==1) { pval$cont[,i] <- summary(eb)$coefficients[2,'Pr(>|t|)'] } #2 if there is an intercept variable
-    else { pval$cont[,i] <- eb$p.value[,1] }
+
+    if (approach=='frequentist') {
+      eb <- eBayes(contrasts.fit(lm1,contrasts=c(0,1,rep(0,ncol(design)-2))))
+      signif$cont[,i] <- eb$F.p.value
+    } else if (approach=='bayesian') {
+      myFormula <- gsub('~','~ +',paste('exprs',myFormula))
+      if (mc.cores==1) {
+        signif$cont[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
+      } else {
+        if ('multicore' %in% loadedNamespaces()) {
+          signif$cont[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y,1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
+        } else stop('multicore library has not been loaded!')
+      }
+    }
   }
   colnames(summaryDif$cont) <- mynames
 }
@@ -121,8 +154,8 @@ if (!is.null(vars2test$ordinal)) {
   survTime <- c(survTime,rep(NA,sum(2*nc+-1)))
   
   summaryDif$ordi <- matrix(NA,nrow=nrow(x),ncol=(sum(nc)+sum(fc)))
-  pval$ordi <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$ordinal))
-  colnames(pval$ordi) <- vars2test$ordinal
+  signif$ordi <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$ordinal))
+  colnames(signif$ordi) <- vars2test$ordinal
   mynames <- character(0)
   for (i in 1:length(vars2test$ordinal)) {
     cat(paste('\nPerforming analysis for ordinal variable ',vars2test$ordinal[i],' ',sep=''))
@@ -130,27 +163,44 @@ if (!is.null(vars2test$ordinal)) {
     #epheno names
     myLevels <- levels(as.factor(as.character(pData(x)[,vars2test$ordinal[i]])))
     meanLabel <- c(meanLabel,myLevels,rep(NA,length(myLevels)-1))
-    phenoClass.pval <- c(phenoClass.pval,'ordinal')
+    phenoClass.signif <- c(phenoClass.signif,'ordinal')
 
+    tmpVar <- as.factor(pData(x)[colsel,vars2test$ordinal[i]])
     colsel <- !is.na(pData(x)[,vars2test$ordinal[i]])
-    design <- model.matrix(~ -1 + as.factor(pData(x)[colsel,vars2test$ordinal[i]]))
-    colnames(design) <- levels(factor(pData(x)[,vars2test$ordinal[i]]))
+    
+    if (missing(adjustVars)) {
+      myFormula <- "~ -1 + tmpVar"
+      myFormula4p <- "~ 1 + as.numeric(tmpVar)"
+    } else {
+      adjustVarsTxt <- paste(paste("pData(x)[colsel,'",adjustVars[!(adjustVars %in% vars2test$ordinal[i])],"']",sep='',collapse=' + '))
+      myFormula <- paste("~ -1 + tmpVar",adjustVarsTxt,sep=' + ')
+      myFormula4p <- paste("~ 1 + as.numeric(tmpVar)",adjustVarsTxt,sep=' + ')
+    }
+    design <- model.matrix(eval(parse(text=myFormula)))
+    design4p <- model.matrix(eval(parse(text=myFormula4p)))
     lm1 <- lmFit(x[,colsel],design=design) #to get means
     mycontrasts <- rbind(rep(-1,nlevels(tmpVar)-1),diag(nlevels(tmpVar)-1),matrix(0,nrow=ncol(design)-nlevels(tmpVar),ncol=nlevels(tmpVar)-1))
     lm2 <- contrasts.fit(lm1,contrasts=mycontrasts) #to get fc
-    design4p <- model.matrix(~ as.numeric(as.factor(pData(x)[colsel,vars2test$ordinal[i]])))
-    lm4p <- lmFit(x[,colsel],design=design4p) 
-    mycontrasts <- c(0,1)
-    eb <- eBayes(contrasts.fit(lm4p,contrasts=mycontrasts)) #to get pvals
     categories <- levels(as.factor(pData(x)[,vars2test$ordinal[i]][colsel]))
     mynames <- c(mynames,paste(vars2test$ordinal[i],categories,sep='.'))
     mynames <- c(mynames,paste(vars2test$ordinal[i],categories[2:length(categories)],'fc',sep='.'))
-    summaryDif$ordi[,(ncCoef[i]+fcCoef[i]):(ncCoef[i]+fcCoef[i]+fc[i])] <- coef(lm1) #means
+    summaryDif$ordi[,(ncCoef[i]+fcCoef[i]):(ncCoef[i]+fcCoef[i]+fc[i])] <- coef(lm1)[,1:length(levels(tmpVar))] #means
     summaryDif$ordi[,(ncCoef[i]+fcCoef[i]+nc[i]):(ncCoef[i]+fcCoef[i]+nc[i]+(fc[i]-1))] <- (2^abs(coef(lm2)))*ifelse(coef(lm2)<0,-1,1) #fc
-    if (length(featureNames(x))==1) {
-      pval$ordi[,i] <- summary(eb)$coefficients[2,'Pr(>|t|)']  #2 if there is an intercept variable
-    } else {
-      pval$ordi[,i] <- as.numeric(eb$p.value)
+    if (approach=='frequentist') {
+      lm4p <- lmFit(x[,colsel],design=design4p)
+      mycontrasts <- rep(0,ncol(design4p))
+      mycontrasts[2] <- 1
+      eb <- eBayes(contrasts.fit(lm4p,contrasts=mycontrasts)) #to get signifs
+      signif$ordi[,i] <- eb$F.p.value
+    } else if (approach=='bayesian') {
+      myFormula4p <- gsub('~','~ +',paste('exprs',myFormula4p))
+      if (mc.cores==1) {
+        signif$ordi[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula4p))
+      } else {
+        if ('multicore' %in% loadedNamespaces()) {
+          signif$ordi[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula4p)),mc.cores=mc.cores))
+        } else stop('multicore library has not been loaded!')
+      }
     }
   }
   colnames(summaryDif$ordi) <- mynames
@@ -170,19 +220,24 @@ if (!is.null(vars2test$categorical)) {
   survTime <- c(survTime,rep(NA,sum(2*nc+-1)))
     
   summaryDif$categ <- matrix(NA,nrow=nrow(x),ncol=sum(nc)+sum(fc))
-  pval$categ <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$categorical)); colnames(pval$categ) <- vars2test$categorical
+  signif$categ <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$categorical)); colnames(signif$categ) <- vars2test$categorical
   mynames <- character(0)
   for (i in 1:length(vars2test$categorical)) {
     cat(paste('\nPerforming analysis for categorical variable ',vars2test$categorical[i],' ',sep=''))
 
     #epheno names
-    myLevels <- levels(as.factor(as.character(pData(x)[,vars2test$categorical[i]])))
+    if (is.factor(pData(x)[,vars2test$categorical[i]])) {
+      tmpVar <- pData(x)[,vars2test$categorical[i]]
+    } else {
+      tmpVar <- as.factor(as.character(pData(x)[,vars2test$categorical[i]]))
+    }
+    myLevels <- levels(tmpVar)
     myLevels <- myLevels[myLevels!='']
     meanLabel <- c(meanLabel,myLevels,rep(NA,length(myLevels)-1))
-    phenoClass.pval <- c(phenoClass.pval,'categorical')
+    phenoClass.signif <- c(phenoClass.signif,'categorical')
 
     colsel <- !is.na(pData(x)[,vars2test$categorical[i]]) & pData(x)[,vars2test$categorical[i]]!=''
-    tmpVar <- as.factor(as.character(pData(x)[colsel,vars2test$categorical[i]]))
+    tmpVar <- tmpVar[colsel]
     if (missing(adjustVars)) {
       myFormula <- "~ -1 + tmpVar"
     } else {
@@ -191,14 +246,25 @@ if (!is.null(vars2test$categorical)) {
     }
     design <- model.matrix(eval(parse(text=myFormula)))
     lm1 <- lmFit(x[,colsel],design=design) #select arrays in the design matrix (e.g. NAs excluded)
-    mycontrasts <- rbind(rep(-1,nlevels(tmpVar)-1),diag(nlevels(tmpVar)-1),matrix(0,nrow=ncol(design)-nlevels(tmpVar),ncol=nlevels(tmpVar)-1))
-    eb <- eBayes(contrasts.fit(lm1,contrasts=mycontrasts))
+    if (approach=='frequentist') {
+      mycontrasts <- rbind(rep(-1,nlevels(tmpVar)-1),diag(nlevels(tmpVar)-1),matrix(0,nrow=ncol(design)-nlevels(tmpVar),ncol=nlevels(tmpVar)-1))
+      eb <- eBayes(contrasts.fit(lm1,contrasts=mycontrasts))
+      signif$categ[,i] <- eb$F.p.value
+    } else if (approach=='bayesian') {
+      myFormula <- gsub('-1','',paste('exprs',myFormula))
+      if (mc.cores==1) {
+        signif$categ[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
+      } else {
+        if ('multicore' %in% loadedNamespaces()) {
+          signif$categ[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
+        } else stop('multicore library has not been loaded!')
+      }
+    }
     tmpCoef <- coef(lm1)[,1:(length(levels(tmpVar)))]
-    colnames(tmpCoef) <- paste(vars2test$categorical[i],levels(tmpVar),sep='.')
+    colnames(tmpCoef) <- gsub('tmpVar','',colnames(tmpCoef))
     summaryDif$categ[,(ncCoef[i]+fcCoef[i]):(ncCoef[i]+fcCoef[i]+fc[i])] <- tmpCoef
-    pval$categ[,i] <- eb$F.p.value
-    mynames <- c(mynames,colnames(tmpCoef))
-    mynames <- c(mynames,paste(colnames(tmpCoef)[-1],'fc',sep='.')) 
+    mynames <- c(mynames,paste(vars2test$categorical[i],colnames(tmpCoef),sep='.'))
+    mynames <- c(mynames,paste(vars2test$categorical[i],colnames(tmpCoef)[-1],'fc',sep='.'))
     refCol <- summaryDif$categ[,ncCoef[i]+fcCoef[i]]
     selCol <- summaryDif$categ[,(ncCoef[i]+fcCoef[i]+1):(ncCoef[i]+fcCoef[i]+ncol(tmpCoef)-1)]
     summaryDif$categ[,(ncCoef[i]+fcCoef[i]+nc[i]):(ncCoef[i]+fcCoef[i]+nc[i]+(fc[i]-1))] <- 2^(abs(selCol-refCol))*ifelse(selCol-refCol<0,-1,1)
@@ -207,13 +273,13 @@ if (!is.null(vars2test$categorical)) {
 }
 
 if (!is.null(vars2test$survival)) {
-  summaryDif$surv <- pval$surv <- matrix(NA,nrow=nrow(x),ncol=nrow(vars2test$survival))
+  summaryDif$surv <- signif$surv <- matrix(NA,nrow=nrow(x),ncol=nrow(vars2test$survival))
   colnames(summaryDif$surv) <- paste(as.character(vars2test$survival[,'event']),'HR',sep='.')
-  colnames(pval$surv) <- as.character(vars2test$survival[,'event'])
+  colnames(signif$surv) <- as.character(vars2test$survival[,'event'])
   for (i in 1:nrow(vars2test$survival)) {
     phenoName <- c(phenoName,vars2test$survival[i,"event"])
     phenoClass <- c(phenoClass,"survival")
-    phenoClass.pval <- c(phenoClass.pval,'survival')
+    phenoClass.signif <- c(phenoClass.signif,'survival')
     phenoType <- c(phenoType,"summaryDif")
     meanLabel <- c(meanLabel,NA)
     survTime <-  c(survTime,vars2test$survival[i,"time"])
@@ -229,30 +295,30 @@ if (!is.null(vars2test$survival)) {
     }
     if (missing(adjustVars)) adjustVarsTxt <- '' else adjustVarsTxt <- paste(paste("pData(eset)[,'",adjustVars[!(adjustVars %in% vars2test$survival[i])],"']",sep='',collapse=' + '))
     if (mc.cores==1) {
-      result.list <- lapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt))))
+      result.list <- lapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach))))
     } else {
       if ('multicore' %in% loadedNamespaces()) {
-        result.list <- multicore::mclapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt))),mc.cores=mc.cores)
+        result.list <- multicore::mclapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach))),mc.cores=mc.cores)
       } else stop('multicore library has not been loaded!')
     }
     result.matrix <- do.call('rbind',result.list)
     summaryDif$surv[,i] <- as.numeric(result.matrix[,1])
-    pval$surv[,i] <- as.numeric(result.matrix[,2])
+    signif$surv[,i] <- as.numeric(result.matrix[,2])
   }
 }
 
 allsummaryDif <- cbind(summaryDif$cont,summaryDif$ordi,summaryDif$categ,summaryDif$surv)
-allpvals <- cbind(pval$cont, pval$ordi, pval$categ, pval$surv)
-rownames(allsummaryDif) <- rownames(allpvals) <- featureNames(x)
-if (p.adjust.method!='none') allpvals <- apply(allpvals,2,function(x) p.adjust(x,p.adjust.method))
+allsignifs <- cbind(signif$cont, signif$ordi, signif$categ, signif$surv)
+rownames(allsummaryDif) <- rownames(allsignifs) <- featureNames(x)
+if (p.adjust.method!='none' & approach=='frequentist') allsignifs <- apply(allsignifs,2,function(x) p.adjust(x,p.adjust.method))
 cat('\n')
 
-phenoName <- c(phenoName,colnames(allpvals))
-phenoClass <- c(phenoClass,phenoClass.pval)
-if (class(allpvals)=='numeric') allpvals <- t(as.matrix(allpvals))
-phenoType <- c(phenoType,rep('pval',ncol(allpvals)))
-meanLabel <- c(meanLabel,rep(NA,ncol(allpvals)))
-survTime <-  c(survTime,rep(NA,ncol(allpvals)))
+phenoName <- c(phenoName,colnames(allsignifs))
+phenoClass <- c(phenoClass,phenoClass.signif)
+if (class(allsignifs)=='numeric') allsignifs <- t(as.matrix(allsignifs))
+phenoType <- c(phenoType,rep('signif',ncol(allsignifs)))
+meanLabel <- c(meanLabel,rep(NA,ncol(allsignifs)))
+survTime <-  c(survTime,rep(NA,ncol(allsignifs)))
 
 pdata <- data.frame(phenoName=as.factor(phenoName),phenoClass=as.factor(phenoClass),phenoType=as.factor(phenoType),meanLabel=as.factor(meanLabel),survTime=as.character(survTime))
 
@@ -261,10 +327,11 @@ myName <- pdata[pdata$phenoClass=='survival' & is.na(pdata$survTime),'phenoName'
 pdata[pdata$phenoName %in% myName & is.na(pdata$survTime),'survTime'] <- pdata[pdata$phenoName %in% myName & !is.na(pdata$survTime),'survTime']
 pdata$survTime <- as.factor(pdata$survTime)
 
-rownames(pdata) <- c(colnames(allsummaryDif),colnames(allpvals))
+rownames(pdata) <- c(colnames(allsummaryDif),colnames(allsignifs))
 pdata <- new('AnnotatedDataFrame',pdata)
-ans <- new('epheno',exprs=as.matrix(cbind(allsummaryDif,allpvals)),phenoData=pdata,annotation=annotation(x))
+ans <- new('epheno',exprs=as.matrix(cbind(allsummaryDif,allsignifs)),phenoData=pdata,annotation=annotation(x))
 ans@p.adjust.method <- p.adjust.method
+ans@approach <- approach
 
 return(ans)
 }
@@ -286,6 +353,19 @@ setGeneric("phenoNames",function (x) standardGeneric("phenoNames"))
 setMethod("phenoNames",signature(x="epheno"),
   function (x) {
     return(as.character(unique(pData(x)$phenoName)))
+  }
+)
+
+setGeneric("approach",function (x) standardGeneric("approach"))
+setMethod("approach",signature(x="epheno"),
+  function (x) {
+    err <- try(x@approach,silent=T)
+    if (inherits(err, "try-error")) {
+      ans <- 'frequentist'
+    } else {
+      ans <- x@approach
+    }
+    return(ans)
   }
 )
 
@@ -321,8 +401,7 @@ setMethod("show",signature(object="epheno"),
     }
     cat("P-value adjustment method: ",p.adjust.method(object),'\n')
     cat("Annotation:",annotation(object),'\n')
-#    cat("phenotypes variable class(es):\n")
-#    show(phenoClass(object))
+    cat("Approach:",approach(object),'\n')
     cat("\nType \"showMethods(classes='epheno')\" for a list of ALL methods\n")
   }
 )
@@ -365,10 +444,28 @@ setMethod("getMeans",signature(x="epheno"),
   }
 )
 
+setGeneric("getSignif",function (x) standardGeneric("getSignif"))
+setMethod("getSignif",signature(x="epheno"),
+  function (x) {
+    sel <- pData(x)$phenoType=="signif"
+    return(exprs(x)[,sel,drop=FALSE])
+  }
+)
+
 setGeneric("getPvals",function (x) standardGeneric("getPvals"))
 setMethod("getPvals",signature(x="epheno"),
   function (x) {
-    sel <- pData(x)$phenoType=="pval"
+    stopifnot(approach(x)=='frequentist')
+    sel <- pData(x)$phenoType=="pval" | pData(x)$phenoType=="signif"
+    return(exprs(x)[,sel,drop=FALSE])
+  }
+)
+
+setGeneric("getPostProbs",function (x) standardGeneric("getPostProbs"))
+setMethod("getPostProbs",signature(x="epheno"),
+  function (x) {
+    stopifnot(approach(x)=='bayesian')
+    sel <- pData(x)$phenoType=="signif"
     return(exprs(x)[,sel,drop=FALSE])
   }
 )
@@ -409,12 +506,18 @@ setMethod("logFcHr",signature(x="epheno"),
 
 setGeneric("export2CSV",function(x, file, row.names=FALSE, ...) standardGeneric("export2CSV"))
 setMethod("export2CSV",signature(x="epheno"), function(x, file, row.names=FALSE, ...) {
-pvals <- getPvals(x)
-colnames(pvals) <- paste(colnames(pvals),'.Pval',sep='')
+signifs <- getSignif(x)
+stopifnot(approach(x) %in% c('frequentist','bayesian'))
+if (approach(x)=='frequentist') {
+  txt <- '.Pval'
+} else  if (approach(x)=='bayesian') {
+  txt <- '.PostProb'
+} 
+colnames(signifs) <- paste(colnames(signifs),txt,sep='')
 if (is.null(fData(x))) {
-  ans <- data.frame(featureNames=featureNames(x), getMeans(x), getSummaryDif(x), pvals)
+  ans <- data.frame(featureNames=featureNames(x), getMeans(x), getSummaryDif(x), signifs)
 } else {
-  ans <- data.frame(fData(x), getMeans(x), getSummaryDif(x), pvals)
+  ans <- data.frame(fData(x), getMeans(x), getSummaryDif(x), signifs)
 }
 write.csv(ans, file=file, row.names=row.names, ...)
 }
@@ -422,8 +525,10 @@ write.csv(ans, file=file, row.names=row.names, ...)
 
 setGeneric("pAdjust",function(x, method='BH') standardGeneric("pAdjust"))
 setMethod("pAdjust",signature(x="epheno"), function(x, method='BH') {
-sel <- which(pData(x)$phenoType=="pval")
-exprs(x)[,sel] <- p.adjust(exprs(x)[,sel],method=method)
+sel <- which(pData(x)$phenoType=="signif")
+if (nrow(x)>1) {
+  exprs(x)[,sel] <- apply(exprs(x)[,sel],2,function(xc) p.adjust(xc,method=method))
+}
 x@p.adjust.method <- method
 return(x)
 }

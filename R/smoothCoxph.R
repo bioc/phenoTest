@@ -1,14 +1,17 @@
-smoothCoxph <- function(time, event, x, xlim, ylim, xlab, ylab, ...) {
+smoothCoxph <- function(time, event, x, xlim, ylim, xlab, ylab, logrisk=TRUE, ...) {
   z <- data.frame(time = time, event = event, x = x)
   z <- z[!is.na(z$event) & !is.na(z$time) & !is.na(z$x),]
   z <- z[order(z$x), ]
   coxph1 <- coxph(Surv(time, event) ~ pspline(x, df = 4), data = z)
-  pred <- predict(coxph1, type = "risk", se.fit = TRUE)
-  tmp <- pred$fit - 1.96 * pred$se.fit
-  sel <- tmp>0; tmp[sel] <- log(tmp[sel]); tmp[!sel] <- NA
-  y <- cbind(log(pred$fit), tmp, log(pred$fit + 1.96 * pred$se.fit))
+  if (logrisk) {
+    pred <- predict(coxph1, type = "lp", se.fit = TRUE)
+    y <- cbind(pred$fit,pred$fit-1.96*pred$se.fit,pred$fit+1.96*pred$se.fit)
+  } else {
+    pred <- predict(coxph1, type='risk', se.fit=TRUE)
+    y <- cbind(log(pred$fit),log(pred$fit-1.96*pred$se.fit),log(pred$fit+1.96*pred$se.fit))
+  }
   if (missing(xlim)) xlim <- range(x)
-  if (missing(ylim)) ylim <- 2*log(range(pred$fit))
+  if (missing(ylim)) ylim <- c(min(y[,1],median(y[,2]),na.rm=T),max(y[,1],median(y[,3]),na.rm=T)) * 1.5
   if (missing(xlab)) xlab <- 'Gene expression'
   if (missing(ylab)) ylab <- 'log Hazard Ratio'  
   if (any(is.infinite(ylim)))

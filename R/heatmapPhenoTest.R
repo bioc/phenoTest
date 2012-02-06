@@ -118,6 +118,7 @@ op <- par(no.readonly=TRUE)
 
 if (heat.kaplan %in% c('heat','both')) {
   if (missing(col)) {
+browser()      
     mymax <- 2^max(abs(eset4plot))
     breaks <- log2(c(1,1.15,1.25,seq(1.5,4,length=20),5))
     if (mymax>4) breaks <- c(breaks,log2(mymax))

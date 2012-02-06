@@ -86,7 +86,7 @@ Formal class 'ExpressionSet' [package "Biobase"] with 7 slots
   .. .. .. ..$ : int [1:3] 1 0 0
 }
 \references{
-Has been obtained from GEO (GSE2034). Only first 1000 genes where stored
+Has been obtained from GEO (GSE2034). Only first 1000 probesets where stored
 (the rest has been removed).
 }
 \examples{

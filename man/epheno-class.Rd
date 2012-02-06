@@ -8,11 +8,14 @@
 \alias{getHr,epheno-method}
 \alias{getMeans,epheno-method}
 \alias{getPvals,epheno-method}
+\alias{getPostProbs,epheno-method}
+\alias{getSignif,epheno-method}
 \alias{getSummaryDif,epheno-method}
 \alias{logFcHr,epheno-method}
 \alias{p.adjust.method,epheno-method}
 \alias{phenoClass,epheno-method}
 \alias{phenoNames,epheno-method}
+\alias{approach,epheno-method}
 \alias{show,epheno-method}
 
 \title{Class "epheno"}
@@ -30,6 +33,9 @@ Objects can be created by calls of the form \code{new("epheno",
     \item{\code{p.adjust.method}:}{Object of class \code{"character"}
       containing the multiple testing adjustment method used (if one was
       used). }
+    \item{\code{approach}:}{Object of class \code{"character"}
+      containing 'frequentist' or 'bayesian' depending on the user's
+      selecion.} 
     \item{\code{assayData}:}{Object of class \code{"AssayData"} that is
       inherited from the \code{ExpressionSet} object used to create the
       \code{epheno} object. }
@@ -72,8 +78,12 @@ Class \code{"\linkS4class{Versioned}"}, by class "ExpressionSet", distance 4.
     \item{getHr}{\code{signature(x = "epheno")}: getter for the hazard
       ratios.}
     \item{getMeans}{\code{signature(x = "epheno")}: getter for the means.}
+    \item{getSignif}{\code{signature(x = "epheno")}: getter for the
+      pvalues or posterior probabilities.}
     \item{getPvals}{\code{signature(x = "epheno")}: getter for the
       pvalues.}
+    \item{getPostProbs}{\code{signature(x = "epheno")}: getter for the
+      posterior probabilities.}
     \item{getSummaryDif}{\code{signature(x = "epheno")}: getter that
       returns hazard ratios, fold changes and pvalues. }
     \item{gseaSignatures}{\code{signature(x = "epheno", signatures =

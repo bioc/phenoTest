@@ -8,7 +8,7 @@ Creates html files and plots using an epheno object, which stores the
 association between a list of variables and gene expression.
 }
 \usage{
-epheno2html(x, epheno, outputdir, prefix = "", genelimit = 50, categories = 3, withPlots = TRUE, id.entrezid = FALSE, organism = "human", homol.symbol, homol.genename, mc.cores = 1)
+epheno2html(x, epheno, outputdir, prefix = "", genelimit = 50, categories = 3, withPlots = TRUE, mc.cores = 1)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -27,20 +27,6 @@ epheno2html(x, epheno, outputdir, prefix = "", genelimit = 50, categories = 3, w
     ExpressionPhenoTest.}
   \item{withPlots}{when FALSE no plots will be produced. Makes the
     process faster.}
-  \item{id.entrezid}{this is for the particular case in which \code{x}'s
-    featureNames is not storing probeset ids but entrezids. The
-    \code{ExpressionSet} will be storing information at the gene level
-    and the row identidiers will be entrezids.}
-  \item{organism}{this information will be used to query the BioMart
-    database in order to get feature information. It will be used only
-    if \code{id.entrezid} is TRUE.}
-  \item{homol.symbol}{the homology table can be provided. This is useful
-    if we want to run the same/similar code several times. This one will
-    store the homology between entrezid and gene symbol. It will be used
-    only if \code{id.entrezid} is TRUE. An example on how to create the
-    homology table is shown in the examples section.}
-  \item{homol.genename}{the same as homol.symbol but in this case the
-    homology table stores the homology between entrezid and gene name.}
   \item{mc.cores}{number of cores that will be used to run the process.}
 }
 \author{

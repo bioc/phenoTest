@@ -59,60 +59,52 @@ getQuery4KEGG <- function (ids) {
     return(out)
 }
 
-epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,withPlots=TRUE,id.entrezid=FALSE,organism='human',homol.symbol,homol.genename,mc.cores=1) {
-  if (!id.entrezid) require(paste(annotation(x),'.db',sep=''),character.only = TRUE)
+epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,withPlots=TRUE,mc.cores=1) {
+  require(paste(annotation(x),'.db',sep=''),character.only = TRUE)
+  stopifnot(annotation(x)==annotation(epheno))
+  stopifnot(identical(featureNames(x),featureNames(epheno))  )
   if (!(categories %in% c(2,3,4))) stop('categories has to be 2, 3 or 4!')
   if (genelimit>nrow(x)) genelimit <- nrow(x)
-   
-  getHomolSymbol <- function(organism='human',entrezid) {
-    if (organism=='human') mart <- useMart("ensembl","hsapiens_gene_ensembl") else if (organism=='mouse') mart <- useMart("ensembl","mmusculus_gene_ensembl") else stop('Only human and mouse organisms are implemented!')
-    homol.symbol <- getLDS(attributes = c("entrezgene"),mart=mart,attributesL=c("external_gene_id"),martL=mart,filters="entrezgene",values=entrezid)
-    return(homol.symbol)
-  }
-   
-  getHomolGenename <- function(organism='human',entrezid) {
-    if (organism=='human') mart <- useMart("ensembl","hsapiens_gene_ensembl") else if (organism=='mouse') mart <- useMart("ensembl","mmusculus_gene_ensembl") else stop('Only human and mouse organisms are implemented!')
-    homol.genename <- getLDS(attributes = c("entrezgene"),mart=mart,attributesL=c("description"),martL=mart,filters="entrezgene",values=entrezid)
-    return(homol.genename)
-  }
-   
-  entrezid.anotation <- function(entrezid,homol.symbol,homol.genename) {
-    symbol <- homol.symbol[match(entrezid,homol.symbol[,1]),2]
-    genename <- homol.genename[match(entrezid,homol.genename[,1]),2]
-    genename <- substr(genename,0,unlist(gregexpr('\\[',genename))-1)
-    ans <- data.frame(symbol,genename); rownames(ans) <- entrezid
-    return(ans)
-  }
-   
-  export2html <- function(varName,x,epheno,varType,categories,outputdir,homol.symbol,homol.genename) {
+  stopifnot(file.exists(outputdir))
+  id.entrezid <- 'org.' %in% substr(annotation(x),0,4)
+    
+  export2html <- function(varName,x,epheno,varType,categories,outputdir) {
     #keep only columns that contain our variable
     epheno <-  epheno[,varName]
-    
+
     #make xls file
     if (id.entrezid) {
-      tmp <- entrezid.anotation(featureNames(x),homol.symbol=homol.symbol,homol.genename=homol.genename)
-      if (varType=='survival') {
-        xout <- data.frame(entrezid=featureNames(x),tmp,getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
-      } else {
-        xout <- data.frame(entrezid=featureNames(x),tmp,getMeans(epheno)[featureNames(x),,drop=FALSE],getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
-      }
+      probeid <- rep(NA,nrow(x))
+      entrezid <- featureNames(x)
     } else {
-      entrezid <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"ENTREZID", sep = "")),ifnotfound=NA))
-      symbol <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"SYMBOL", sep = "")),ifnotfound=NA))
-      genename <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"GENENAME", sep = "")),ifnotfound=NA))
-      if (varType=='survival') {
-        xout <- data.frame(probeid=featureNames(x),entrezid,symbol,genename,getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
-      } else {
-        xout <- data.frame(probeid=featureNames(x),entrezid,symbol,genename,getMeans(epheno)[featureNames(x),,drop=FALSE],getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getPvals(epheno)[featureNames(x),,drop=FALSE]))
-      }
+      probeid <- featureNames(x)
+      envir <- eval(parse(text=paste(annotation(x),'ENTREZID',sep='')))
+      entrezid <- as.character(AnnotationDbi::mget(featureNames(x),envir,ifnotfound=NA))
     }
-    xout <- xout[order(xout$p.value),]
-    write.csv(xout,paste(outputdir,'/',prefix,'_',varType,'_',varName,'.csv',sep=''),row.names=FALSE)
+    envir <- eval(parse(text=paste(annotation(x),'SYMBOL',sep='')))
+    symbol <- as.character(AnnotationDbi::mget(featureNames(x),envir,ifnotfound=NA))
+    envir <- eval(parse(text=paste(annotation(x),'GENENAME',sep='')))
+    genename <- as.character(AnnotationDbi::mget(featureNames(x),envir,ifnotfound=NA))
+    if (varType=='survival') {
+      xout <- data.frame(probeid,entrezid,symbol,genename,getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getSignif(epheno)[featureNames(x),,drop=FALSE]))
+    } else {
+      xout <- data.frame(probeid,entrezid,symbol,genename,getMeans(epheno)[featureNames(x),,drop=FALSE],getSummaryDif(epheno)[featureNames(x),,drop=FALSE],p.value=as.numeric(getSignif(epheno)[featureNames(x),,drop=FALSE]))
+    }
+    if (id.entrezid) xout <- xout[,-1]
+    if (approach(epheno)=='bayesian') colnames(xout)[grepl('p.value',colnames(xout))] <- 'postProb'
+    write.csv(xout,paste(outputdir,'/',ifelse(prefix=='','',paste(prefix,'_',sep='')),varType,'_',varName,'.csv',sep=''),row.names=FALSE)
+    if (approach(epheno)=='frequentist') xout <- xout[order(xout$p.value),] else xout <- xout[order(xout$postProb,decreasing=TRUE),]
     
     #keep amount of genes equal to genelimit
-    epheno <- epheno[order(getPvals(epheno)),];  epheno <- epheno[1:genelimit,]
+    epheno <- epheno[order(getSignif(epheno),decreasing=(approach(epheno)=='bayesian')),]
+    epheno <- epheno[1:genelimit,]
     x <- x[featureNames(epheno),]
-    if (id.entrezid) tmp <- tmp[featureNames(epheno),]
+    if (id.entrezid) sel <- match(featureNames(epheno),entrezid) else sel <- match(featureNames(epheno),probeid)
+    probeid <- probeid[sel]
+    entrezid <- entrezid[sel]
+    symbol <- symbol[sel]
+    genename <- genename[sel]
+    if (id.entrezid) xout <- xout[xout$entrezid %in% entrezid,] else xout <- xout[xout$probeid %in% probeid,]
     
     #remove samples with nulls on pData
     x <- x[,!is.na(pData(x)[,varName])]
@@ -130,7 +122,7 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
         fit <- apply(geneCategories, 1, function(x) survfit(s~x))
         if (categories==2) uniqueCat <- c('Low','High') else if (categories==3) uniqueCat <- c('Low','Medium','High') else if (categories==4) uniqueCat <- c('Low','Medium low','Medium high','High')
         myFun <- function(i) {
-          pdf(paste(dirOut,'/survival_',gsub('/','_',featureNames(x)[i]),'.pdf',sep=''))
+          png(paste(dirOut,'/survival_',gsub('/','_',featureNames(x)[i]),'.png',sep=''))
           if (categories==2) {
             plot(fit[[i]],ylab='Survival',xlab=paste('Time to ',varName,sep=''), col=c('green','red'))
             legend("bottomleft",uniqueCat,col=c('green','red'),lty=1)
@@ -141,18 +133,22 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
             plot(fit[[i]],ylab='Survival',xlab=paste('Time to ',varName,sep=''), col=c('green','blue','yellow','red'))
             legend("bottomleft",uniqueCat,col=c('green','blue','yellow','red'),lty=1)
           }
-          title(paste('p-value',ifelse(getPvals(epheno)[i,]<.0001,'<0.0001',paste('=',round(getPvals(epheno)[i,],4),sep='')),sep=''))
+          title(paste(ifelse(approach(epheno)=='frequentist','p-value','postProb'),ifelse(getSignif(epheno)[i,]<.0001,'<0.0001',paste('=',round(getSignif(epheno)[i,],4),sep='')),sep=''))
           dev.off()
-          pdf(paste(dirOut,'/smooth_',gsub('/','_',featureNames(x)[i]),'.pdf',sep=''))
+          png(paste(dirOut,'/smooth_',gsub('/','_',featureNames(x)[i]),'.png',sep=''))
           smoothCoxph(pData(x)[,varName.time],pData(x)[,varName.event],as.numeric(exprs(x[i,])))
           dev.off()
         }
         lapply(as.list(1:nrow(x)),myFun)
       }
       myFun <- function(i) {
-        pdf(paste(dirOut,'/boxplot_',gsub('/','_',featureNames(x)[i]),'.pdf',sep=''))
+        png(paste(dirOut,'/plot_',gsub('/','_',featureNames(x)[i]),'.png',sep=''))
         if (varType=='survival') {
-          boxplot(as.numeric(exprs(x[i,])) ~ as.factor(pData(x)[,varName.event]),ylab='Expression level',xlab=varName.time)
+          if (ncol(x)>20) {
+            boxplot(as.numeric(exprs(x[i,])) ~ as.factor(pData(x)[,varName.event]),ylab='Expression level',xlab=varName.time)
+          } else {
+            dotchart(as.numeric(exprs(x[i,])),as.factor(pData(x)[,varName.event]),xlab='Expression level',ylab=varName.time,col=as.numeric(as.factor(pData(x)[,varName.event]))+1,groups=as.factor(pData(x)[,varName.event]))
+          }
         } else if (varType=='continuous') {
           mylevels <- levels(pData(epheno)[pData(epheno)$phenoName==varName,'meanLabel'])
           mylevels <- gsub('\\[','',gsub('\\]','',gsub('\\)','',mylevels)))
@@ -165,58 +161,53 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
             myCateg[sel] <- j
           }
           myCateg <- factor(myCateg,labels=levels(pData(epheno)[pData(epheno)$phenoName==varName,'meanLabel']))
-          boxplot(as.numeric(exprs(x[i,])) ~ myCateg,ylab='Expression level',xlab=varName)
+          if (ncol(x)>20) {
+            boxplot(as.numeric(exprs(x[i,])) ~ myCateg,ylab='Expression level',xlab=varName)
+          } else {
+            dotchart(as.numeric(exprs(x[i,])),as.factor(myCateg),xlab='Expression level',ylab=varName,col=as.numeric(as.factor(myCateg))+1,groups=as.factor(myCateg))
+          }
         } else {
-          boxplot(as.numeric(exprs(x[i,])) ~ as.factor(pData(x)[,varName]),ylab='Expression level',xlab=varName)
+          if (ncol(x)>20) {
+            boxplot(as.numeric(exprs(x[i,])) ~ as.factor(pData(x)[,varName]),ylab='Expression level',xlab=varName)
+          } else {
+            dotchart(as.numeric(exprs(x[i,])),as.factor(pData(x)[,varName]),xlab='Expression level',ylab=varName,col=as.numeric(as.factor(pData(x)[,varName]))+1,groups=as.factor(pData(x)[,varName]))
+          }
         }
-        title(paste('p-value',ifelse(getPvals(epheno)[i,]<.0001,'<0.0001',paste('=',round(getPvals(epheno)[i,],4),sep='')),sep=''))
+        title(paste(ifelse(approach(epheno)=='frequentist','p-value','postProb'),ifelse(getSignif(epheno)[i,]<.0001,'<0.0001',paste('=',round(getSignif(epheno)[i,],4),sep='')),sep=''))
         dev.off()
       }
-      lapply(as.list(1:nrow(x)),myFun)
+      lapply(as.list(1:nrow(xout)),myFun)
     }
-   
+
     #make html file
-    if (id.entrezid) {
-      symbol <- tmp[,'symbol']; genename <- tmp[,'genename']
-      #columns with links
-      genelist <- list(entrezid=featureNames(x)); head <- c('Entrez ID'); repository <- list("en")
-    } else {
-      entrezid <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"ENTREZID", sep = "")),ifnotfound=NA))
-      symbol <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"SYMBOL", sep = "")),ifnotfound=NA))
-      genename <- unlist(AnnotationDbi::mget(featureNames(x),AnnotationDbi::get(paste(annotation(x),"GENENAME", sep = "")),ifnotfound=NA))
-      #columns with links
-      genelist <- list(probeids=featureNames(x)); head <- c('Probe ID'); repository <- list("affy")
-      genelist$entrez <- entrezid; head <- c(head,'Entrez ID'); repository <- c(repository,"en")
-    }
+    xout[is.na(xout)] <- '---'
     if (withPlots) {
-      genelist$linkText  <- paste(varName,'/boxplot_',gsub('/','_',featureNames(x)),sep=''); head <- c(head,'Box plot'); repository <- c(repository,"phenoplot")
       if (varType=='survival') {
-        genelist$linkText2  <- paste(varName,'/survival_',gsub('/','_',featureNames(x)),sep=''); head <- c(head,'Survival plot'); repository <- c(repository,"phenoplot")
-        genelist$linkText3  <- paste(varName,'/smooth_',gsub('/','_',featureNames(x)),sep=''); head <- c(head,'Smoothed HR'); repository <- c(repository,"phenoplot")
+        txt <- rep('Open',nrow(xout))
+        xout <- data.frame(xout[,c(1:(ifelse(id.entrezid,3,4)))],Plot=txt,Kaplan=txt,SmoothedHR=txt,xout[,c((ifelse(id.entrezid,4,5)):ncol(xout))])
+      } else {
+        xout <- data.frame(xout[,c(1:(ifelse(id.entrezid,3,4)))],plot=rep('Open',nrow(xout)),xout[,c((ifelse(id.entrezid,4,5)):ncol(xout))])
       }
     }
-    #columns without live links
-    if (varType=='survival') {
-      othernames <- data.frame(symbol,genename,getSummaryDif(epheno),p.value=getPvals(epheno))
-      head <- c(head,'Symbol','Gene Name',colnames(getSummaryDif(epheno)),'p.value')
-    } else {
-      othernames <- data.frame(symbol,genename,getMeans(epheno),getSummaryDif(epheno),p.value=getPvals(epheno))
-      head <- c(head,'Symbol','Gene Name',colnames(getMeans(epheno)),colnames(getSummaryDif(epheno)),'p.value')
+    links <- tiny.pic <- vector('list',length=ncol(xout))
+    if (!id.entrezid) links[[1]] <- paste('https://www.affymetrix.com/LinkServlet?probeset=',xout$probeid,sep='')
+    links[[ifelse(id.entrezid,1,2)]] <- paste('http://www.ncbi.nlm.nih.gov/sites/entrez?db=gene&cmd=Retrieve&dopt=Graphics&list_uids=',xout$entrezid,sep='')
+    links[[ifelse(id.entrezid,2,3)]] <- paste('http://www.genecards.org/index.php?path=/Search/keyword/',xout$symbol,sep='')
+    if (withPlots) {
+      tiny.pic[[ifelse(id.entrezid,4,5)]] <- links[[ifelse(id.entrezid,4,5)]] <- paste('phenoPlots/',varName,'/plot_',gsub('/','_',featureNames(x)),'.png',sep='')
+      if (varType=='survival') {
+        tiny.pic[[ifelse(id.entrezid,5,6)]] <- links[[ifelse(id.entrezid,5,6)]] <- paste('phenoPlots/',varName,'/survival_',gsub('/','_',featureNames(x)),'.png',sep='')
+        tiny.pic[[ifelse(id.entrezid,6,7)]] <- links[[ifelse(id.entrezid,6,7)]] <- paste('phenoPlots/',varName,'/smooth_',gsub('/','_',featureNames(x)),'.png',sep='')
+      }
     }
-    #create html file
-    phenoTest::htmlpage(genelist=genelist,filename=paste(outputdir,'/',prefix,varType,'_',varName,'.html',sep=''),title=paste(varName,' (',varType,' variable)',sep=''),othernames=othernames,table.head=head,repository=repository)
-    sortDragHtmlTable(paste(outputdir,'/',prefix,varType,'_',varName,'.html',sep=''))
-  }
-   
-  #get homol.symbol and homol.genename if necessary
-  if (id.entrezid & (missing(homol.symbol) | missing(homol.genename))) {
-    homol.symbol <- getHomolSymbol(organism=organism,entrezid=featureNames(x))
-    homol.genename <- getHomolGenename(organism=organism,entrezid=featureNames(x))
+    file <- paste(outputdir,'/',prefix,varType,'_',varName,'.html',sep='')
+    title <- paste(varName,' (',varType,' variable)',sep='')
+    write.html(xout,file=file,links=links,tiny.pic=tiny.pic,title=title)
   }
    
   myFun <- function(varName) {
     varType <- as.character(phenoClass(epheno[,varName]))
-    export2html(varName=varName,x=x,epheno=epheno,varType=varType,categories=categories,outputdir=outputdir,homol.symbol=homol.symbol,homol.genename=homol.genename)
+    export2html(varName=varName,x=x,epheno=epheno,varType=varType,categories=categories,outputdir=outputdir)
   }
   varName <- as.list(phenoNames(epheno))
   if (mc.cores==1) {
@@ -231,6 +222,6 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
   #for (i in 1:ncol(epheno)) {
   #  varName <- phenoNames(epheno)
   #  varType <- as.character(phenoClass(epheno)[phenoClass(epheno)==varName,'phenoClass'])
-  #  export2html(varName=varName,x=x,epheno=epheno,varType=varType,categories=categories,outputdir=outputdir,homol.symbol=homol.symbol,homol.genename=homol.genename)
+  #  export2html(varName=varName,x=x,epheno=epheno,varType=varType,categories=categories,outputdir=outputdir)
   #}
 }

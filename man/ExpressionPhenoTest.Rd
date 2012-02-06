@@ -9,7 +9,7 @@ gene expression.
 }
 \usage{
 ExpressionPhenoTest(x, vars2test, adjustVars,
-p.adjust.method='BH',continuousCategories=3,mc.cores) 
+p.adjust.method='BH',continuousCategories=3,mc.cores,approach='frequentist') 
 }
 \arguments{
 \item{x}{ ExpressionSet containing expression levels in \code{exprs(x)}
@@ -28,17 +28,25 @@ p.adjust.method='BH',continuousCategories=3,mc.cores)
 \item{continuousCategories}{ number of categories used for continuous
   variables.} 
 \item{mc.cores}{ the number of cores to use, i.e. how many processes
-  will be spawned (at most).} 
+  will be spawned (at most).}
+\item{approach}{ this can be either 'frequentist' or 'bayesian'. With
+  frequentist pvalues will be computed. With 'bayesian' posterior
+  probabilities will be computed.}
 }
 \details{
-The effect of both continuous, categorical and ordinal phenotype variables on
-gene expression levels are tested via lmFit.
-For ordinal variables a single coefficient is used to test its effect on
-gene expression (trend test), which is then used to obtain a P-value
+If approach is 'frequentist':
+-The effect of both continuous, categorical and ordinal phenotype
+variables on gene expression levels are tested via lmFit.
+-For ordinal variables a single coefficient is used to test its effect
+on gene expression (trend test), which is then used to obtain a P-value
 (means for each category are reported in the output).
-Gene expression effects on
-survival are tested via Cox proportional hazards model, as implemented
-in function 'coxph'.
+-Gene expression effects on survival are tested via Cox proportional
+hazards model, as implemented in function 'coxph'.
+
+If approach is bayesian posterior probabilities are computed comparing
+the BIC of a model with the variable of interest as explanatory variable
+against the BIC of the same model without the variable of interest as
+explanatory variable.
 }
 \value{
 The output is an \code{epheno} object, which basically extends an
@@ -50,9 +58,14 @@ which is accessible with the \code{pData} method.
 
 There are several methods that can be used to access the information
 stored in an \code{epheno} object. For more information please type one
-of the following: \code{getFc(x), getHr(x), getMeans(x), getPvals(x),
-getSummaryDif(x), logFcHr(x), p.adjust.method(x), phenoClass(x),
-phenoNames(x)}.
+of the following: \code{getFc(x), getHr(x), getMeans(x), getSignif,
+getPvals(x), getPostProbs, getSummaryDif(x), logFcHr(x),
+p.adjust.method(x), phenoClass(x), phenoNames(x)}.
+}
+\references{
+Kass R.E. and Wasserman L. A Reference Bayesian Test for Nested
+Hypotheses and its Relationship to the Schwarz Criterion. Journal of the
+American Statistical Association, 90, pp. 928-934.
 }
 \keyword{datasets}
 \examples{

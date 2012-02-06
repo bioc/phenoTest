@@ -74,13 +74,15 @@ variables and the gene expression from the given \texttt{ExpressionSet}.
 We will use the \texttt{ExpressionPhenoTest} function to create the \texttt{epheno} object.
 We will have to tell this function which phenotype variables we want to test and the type of
 these variables (if they are \emph{ordinal}, \emph{continuous}, \emph{categorical} or \emph{survival}
-variables). For this purpose we will create a variable called (for instance) \texttt{vars2test}. 
+variables). 
+For this purpose we will create a variable called (for instance) \texttt{vars2test}. 
 This variable has to be of class \texttt{list} with components \emph{continuous}, \emph{categorical}, 
 \emph{ordinal} and \emph{survival} indicating which phenotype variables should be tested. \emph{continuous},
 \emph{categorical} and \emph{ordinal} must be character vectors, \emph{survival} a matrix with columns
-named \emph{time} and \emph{event}. The names must match names in \texttt{names(pData(eset))} (being
-\texttt{eset} the \texttt{ExpressionSet} of the cohort we are interested in).
-
+named \emph{time} and \emph{event}. 
+The names must match names in \texttt{names(pData(eset))} (being
+\texttt{eset} the \texttt{ExpressionSet} of the cohort we are
+interested in). 
 
 \begin{scriptsize}
 <<setVars2test>>=
@@ -120,6 +122,10 @@ expression levels are tested via \texttt{lmFit} from package \texttt{limma} (\ci
 test), which is then used to obtain a P-value. Gene expression effects on \emph{survival} are tested
 via Cox proportional hazards model (\cite{cox:1972}), as implemented in function \texttt{coxph} from
 package \texttt{survival}.
+
+If we want we can compute posterior probabilities instead of pvalues
+we can set the argument \texttt{approach}='bayesian'. 
+The default value is 'frequentist'.
 
 \texttt{ExpressionPhenoTest} implements parallel computing via the function \texttt{mclapply} from
 the package \texttt{multicore}. Currently \texttt{multicore} only operates on Unix systems. If you
@@ -177,13 +183,13 @@ head(getHr(epheno))
 
 \texttt{ExpressionPhenoTest} also computes P-values. \texttt{eBayes} from \texttt{limma} package is
 used for continuous, categorical and ordinal phenotypes. A Cox proportional hazards likelihood-ratio
-test is used for survival phenotypes. P-values can be accessed with \texttt{getPvals}. Notice that a
+test is used for survival phenotypes. P-values can be accessed with \texttt{getSignif}. Notice that a
 single P-value is reported for each phenotype variable. For categorical variables these corresponds
 to the overall null hypothesis that there are no differences between groups.
 
 \begin{scriptsize}
-<<ephenoGetPvals>>=
-head(getPvals(epheno))
+<<ephenoGetSignif>>=
+head(getSignif(epheno))
 @ 
 \end{scriptsize}
 
@@ -375,36 +381,30 @@ gene set will have around 25\% of differentially expressed genes, and classical 
 will tend to flag the gene set as statistically significant. In contrast, our implementation will
 tend to select only gene sets with more than 25\% of differentially expressed genes.
 
-On a first step we will use the \texttt{gseaSignatures} method to compute \emph{enrichment scores}
-(see \cite{subramanian:2005} for details about the enrichment scores) and \emph{simulated enrichment
-  scores} (by permuting the selection of genes). The \emph{simulated enrichment scores} will be used
-to compute P-values and FDR by the \texttt{gseaSignificance} method. We can summarize the results
-obtained using the \texttt{summary} method. The following chunk of code is an illustrative example
-of it: 
+We will use the \texttt{gsea} method to compute \emph{enrichment
+scores} (see \cite{subramanian:2005} for details about the enrichment
+scores) and \emph{simulated enrichment scores} (by permuting the
+selection of genes).
+The \emph{simulated enrichment scores} are used
+to compute P-values and FDR. 
+We can summarize the results obtained using the \texttt{summary} method. 
+The following chunk of code is an illustrative example of it:  
 
 \begin{scriptsize}
-<<gseaSignatures>>=
-my.gseaSignatures <- gseaSignatures(x=epheno,signatures=mySignature,B=1000)
+<<gsea>>=
+my.gsea <- gsea(x=epheno,gsets=mySignature,B=1000,p.adjust='BH')
+my.gsea
+summary(my.gsea)
 @ 
 \end{scriptsize}
 
 We receive one message for each phenotype we are testing.
 
-\begin{scriptsize}
-<<gseaSignificance>>=
-my.gseaSignatures
-my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
-my.gseaSignificance
-my.summary <- summary(my.gseaSignificance)
-my.summary
-@ 
-\end{scriptsize}
-
 We can produce plots as follows:
 
 \begin{scriptsize}
 <<gseaPlot>>=
-plot(my.gseaSignatures,my.gseaSignificance)
+plot(my.gsea)
 @ 
 \end{scriptsize}
 
@@ -415,12 +415,11 @@ can be seen in Figure \ref{fig:plotGsea}.
 
 \begin{scriptsize}
 <<label=plotGseaPrepare,include=FALSE>>=
-my.gseaSignatures <- gseaSignatures(x=epheno[,'Relapse'],signatures=mySignature[1],B=100)
-my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
-summary(my.gseaSignificance)
+my.gsea <- gsea(x=epheno[,'Relapse'],gsets=mySignature[1],B=100,p.adjust='BH')
+summary(my.gsea)
 @ 
 <<label=plotGseaEs,include=FALSE>>=
-plot(my.gseaSignatures,my.gseaSignificance,es.nes='es')  
+plot(my.gsea,es.nes='es',selGsets='My first signature')  
 @ 
 \begin{figure}
 \begin{center}
@@ -433,8 +432,8 @@ plot(my.gseaSignatures,my.gseaSignificance,es.nes='es')
 \end{figure}
 \end{scriptsize}
 
-\texttt{gseaSignatures} can be used not only with \texttt{epheno} objects but also with objects of class \texttt{numeric}
-or \texttt{matrix}. For more information read the \texttt{gseaSignatures} function help.
+\texttt{gsea} can be used not only with \texttt{epheno} objects but also with objects of class \texttt{numeric}
+or \texttt{matrix}. For more information read the \texttt{gsea} function help.
 
 Following similar ideas to \cite{virtaneva:2001} we also implemented a
 Wilcoxon test. This can be used instead of the permutation test which
@@ -449,12 +448,11 @@ plot using Wilcoxon test can be seen in Figure
 
 \begin{scriptsize}
 <<plotGseaWilcoxPrepare>>=
-my.gseaSignatures <- gseaSignatures(x=epheno[,'Relapse'],signatures=mySignature[1],B=100,test='wilcox')
-my.gseaSignificance <- gseaSignificance(my.gseaSignatures,p.adjust='BH')
-summary(my.gseaSignificance)
+my.gsea <- gsea(x=epheno[,'Relapse'],gsets=mySignature,B=100,test='wilcox',p.adjust='BH')
+summary(my.gsea)
 @
 <<label=plotGseaWilcox,include=FALSE>>=
-plot(my.gseaSignatures,my.gseaSignificance)  
+plot(my.gsea,selGsets='My first signature')
 @ 
 \begin{figure}
 \begin{center}
@@ -477,6 +475,6 @@ set is as enriched as a randomly selected gene set, opposed to testing that ther
 genes in the set as is done in GSEA.
 
 \bibliographystyle{plainnat}
-\bibliography{references} 
+\bibliography{references}
 
 \end{document}

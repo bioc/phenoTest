@@ -8,7 +8,7 @@ Builds a plot showing how hazard behaves over different levels of
 expression of a given gene. Confidence intervals are also provided. 
 }
 \usage{
-smoothCoxph(time, event, x, xlim, ylim, xlab, ylab, ...)
+smoothCoxph(time, event, x, xlim, ylim, xlab, ylab, logrisk=TRUE, ...)
 }
 \arguments{
   \item{time}{variable where time to survival is stored.}
@@ -18,6 +18,9 @@ smoothCoxph(time, event, x, xlim, ylim, xlab, ylab, ...)
   \item{ylim}{\code{ylim} for the plot.}
   \item{xlab}{\code{xlab} for the plot.}
   \item{ylab}{\code{ylab} for the plot.}  
+  \item{logrisk}{\code{logrisk} if we want to compute risk or logrisk
+    estimates. By default this is TRUE, which has a better behaviour
+    under small sample sizes.}  
   \item{\dots}{other arguments that will be passed to plot.}
 }
 \author{

@@ -26,6 +26,7 @@ setGeneric("barplotSignifSignatures",function (x, signatures, referenceSignature
 
 setMethod("barplotSignifSignatures",signature(x="epheno",signatures="list"),
   function (x, signatures, referenceSignature, testUpDown=FALSE, simulate.p.value = FALSE, B = 10^4, p.adjust.method='none', alpha=.05, ylab, ylim=ylim, cex.text=1, ...) {
+    stopifnot(approach(x)=='frequentist')
     if (!missing(referenceSignature)) if (!(referenceSignature %in% names(signatures))) stop('referenceSignature not in names(signatures)')
     lensig <- unlist(lapply(signatures,function(x) length(x)))
     if (all(lensig==0)) stop('All signatures are empty. Check the argument signatures.\n')
@@ -87,7 +88,7 @@ setMethod("barplotSignifSignatures",signature(x="epheno",signatures="list"),
     
     #Plot
     z <- lapply(x2plot,function(x) as.matrix(100*t(x/rowSums(x))[-2,]))
-    if (missing(ylim)) ylim <- c(0,1.2*max(sapply(z,'max')))
+    if (missing(ylim)) ylim <- c(0,1.2*max(sapply(z,'max'),na.rm=T))
     if (missing(ylab)) ylab <- "% differentially expressed genes"
     cex <- ifelse(testUpDown,.8,1)
     if (length(signatures)==1) {

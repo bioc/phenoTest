@@ -21,6 +21,10 @@ selSignatures <- function(x,signatures) {
   } else {
     stop('No genes of the provided signatures are in names(x).')
   }
+  signNotInX <- any(unlist(lapply(signatures, function(y) any(!(y %in% names(x))))))
+  if (signNotInX) {
+    warning('There is at least one signature that contains elements that are not in x!')
+  }
   return(signatures)
 }
 
@@ -317,7 +321,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
       myTitle <- paste(ifelse(missing(variable),'',paste('variable:',variable,' / ',sep='')),'signature:', names(z)[i],sep='')
       if (es.nes %in% c('es','both')) {
         #es plot
-        if (test!='perm') pvalfdr <- summary(y)[i,'pval'] else pvalfdr <- y[[1]][i,][['pval.es']]
+        if (test!='perm') pvalfdr <- y$summary[i,'pval'] else pvalfdr <- y$summary[i,][['pval.es']]
         plotGSEA(es.nes=es,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=pvalfdr,p.adjust.method=y[[2]],EsOrNes='ES',es.nes.ylim=es.ylim,test=test)
       }
       if (es.nes %in% c('nes','both')) {
@@ -372,25 +376,25 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
 # 4.1 methods for gseaSignatures #
 ##################################
 
-setGeneric("gseaSignatures",function (x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') standardGeneric("gseaSignatures"))
+setGeneric("gseaSignatures",function (x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') standardGeneric("gseaSignatures"))
 setGeneric("getEs",function (x) standardGeneric("getEs"))
 setGeneric("getEsSim",function (x) standardGeneric("getEsSim"))
 setGeneric("getNes",function (x) standardGeneric("getNes"))
 setGeneric("getFcHr",function (x) standardGeneric("getFcHr"))
 
-setMethod("gseaSignatures",signature(x="numeric",signatures="list"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
+setMethod("gseaSignatures",signature(x="numeric",gsets="list"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
   x <- preProcessX(x,logScale=logScale,absVals=absVals,averageRepeats=averageRepeats)
-  signatures <- selSignatures(x,signatures)
+  gsets <- selSignatures(x,gsets)
   if (test=='perm') {
-    numPerm <- ceiling(B/length(signatures))
+    numPerm <- ceiling(B/length(gsets))
     if (numPerm<50) { #check that each gene set has minimum number of permutations
       warning('You are using less than 50 permutations per gene set. Results will be very inaccurate. You should increse the number of permutations!\n')
     } else {
-      cat(paste(length(signatures),'gene sets were provided and',B,'permutations were assigned,\n therefore ',numPerm,'permutations will be computed on each gene set.\n'))
+      cat(paste(length(gsets),'gene sets were provided and',B,'permutations were assigned,\n therefore ',numPerm,'permutations will be computed on each gene set.\n'))
     }
-    signatures.len <- unlist(lapply(signatures,length)); names(signatures.len) <- names(signatures)
-    probNotCentered <- (1-pnorm(0,mean(x),sd(x) * sqrt((1/signatures.len) * (1-signatures.len/length(x)) * (length(x)/(length(x)-1)))))
+    gsets.len <- unlist(lapply(gsets,length)); names(gsets.len) <- names(gsets)
+    probNotCentered <- (1-pnorm(0,mean(x),sd(x) * sqrt((1/gsets.len) * (1-gsets.len/length(x)) * (length(x)/(length(x)-1)))))
     if (any(probNotCentered>0.99)) { #check if x is centered
       maxSigLen <- sum(1-pnorm(0,mean(x),sd(x) * sqrt((1/(1:length(x))) * (1-(1:length(x))/length(x)) * (length(x)/(length(x)-1)))) < 0.99)
       cat('Some gene sets are too big to compute permutation tests. Wilcoxon test will be used instead.\n')
@@ -398,14 +402,14 @@ setMethod("gseaSignatures",signature(x="numeric",signatures="list"),
       test <- 'wilcox'
     }
   }
-  ans <- lapply(signatures,function(y) getSourceData(x=x,s=y,B=numPerm,mc.cores=mc.cores,test=test))
-  ans <- new("gseaSignaturesSign",list(es.esSim=new("gseaSignatures",ans),fc.hr=x,signatures=signatures,test=test))
+  ans <- lapply(gsets,function(y) getSourceData(x=x,s=y,B=numPerm,mc.cores=mc.cores,test=test))
+  ans <- new("gseaSignaturesSign",list(es.esSim=new("gseaSignatures",ans),fc.hr=x,signatures=gsets,test=test))
   return(ans)
  }
 )
 
-setMethod("gseaSignatures",signature(x="epheno",signatures="list"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
+setMethod("gseaSignatures",signature(x="epheno",gsets="list"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
    phenoTest2list <- function(x) {
       ans <- getSummaryDif(x)
       ans.list <- vector('list',ncol(ans)); names(ans.list) <- colnames(ans)
@@ -413,13 +417,13 @@ setMethod("gseaSignatures",signature(x="epheno",signatures="list"),
       return(ans.list)
    }
    x <- phenoTest2list(x)
-   ans <- lapply(x,function(x) gseaSignatures(x,signatures,logScale,absVals=absVals,averageRepeats=averageRepeats,B,mc.cores,test)) # call method(numeric,list)
+   ans <- lapply(x,function(x) gseaSignatures(x,gsets,logScale,absVals=absVals,averageRepeats=averageRepeats,B,mc.cores,test)) # call method(numeric,list)
    return(new("gseaSignaturesVar",ans))
  }
 )
 
-setMethod("gseaSignatures",signature(x="matrix",signatures="list"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test) {
+setMethod("gseaSignatures",signature(x="matrix",gsets="list"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test) {
    matrix2list <- function(x) {
       ans <- x[,grep('\\.HR$|\\.fc$',colnames(x),perl=TRUE),drop=FALSE]
       ans.list <- vector('list',ncol(ans)); names(ans.list) <- colnames(ans)
@@ -428,46 +432,46 @@ setMethod("gseaSignatures",signature(x="matrix",signatures="list"),
    }
    x <- matrix2list(x)
    B <- ceiling(B/length(x))
-   ans <- lapply(x,function(x) gseaSignatures(x,signatures,logScale,absVals=absVals,averageRepeats=averageRepeats,B,mc.cores,test)) # call method(numeric,list)
+   ans <- lapply(x,function(x) gseaSignatures(x,gsets,logScale,absVals=absVals,averageRepeats=averageRepeats,B,mc.cores,test)) # call method(numeric,list)
    return(new("gseaSignaturesVar",ans))
  }
 )
 
-setMethod("gseaSignatures",signature(signatures="character"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test) {
-   signatures <- list(signature=signatures)
-   ans <- gseaSignatures(x,signatures,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
+setMethod("gseaSignatures",signature(gsets="character"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test) {
+   gsets <- list(signature=gsets)
+   ans <- gseaSignatures(x,gsets,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
    return(ans)
  }
 )
 
 #method for signature=geneset has to be defined for every possible class of x (there seems to be an error with R identifying GeneSetCollection objects)
-setMethod("gseaSignatures",signature(x="numeric",signatures="GeneSetCollection"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
-   signatures <- geneIds(signatures)
-   ans <- gseaSignatures(x,signatures,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
+setMethod("gseaSignatures",signature(x="numeric",gsets="GeneSetCollection"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
+   gsets <- geneIds(gsets)
+   ans <- gseaSignatures(x,gsets,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
    return(ans)
  }
 )
-setMethod("gseaSignatures",signature(x="epheno",signatures="GeneSetCollection"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
-   tmpsignatures <- geneIds(signatures); names(tmpsignatures) <- names(signatures); signatures <- tmpsignatures
-   ans <- gseaSignatures(x,signatures,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
+setMethod("gseaSignatures",signature(x="epheno",gsets="GeneSetCollection"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
+   tmpgsets <- geneIds(gsets); names(tmpgsets) <- names(gsets); gsets <- tmpgsets
+   ans <- gseaSignatures(x,gsets,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
    return(ans)
  }
 )
-setMethod("gseaSignatures",signature(x="matrix",signatures="GeneSetCollection"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
-   tmpsignatures <- geneIds(signatures); names(tmpsignatures) <- names(signatures); signatures <- tmpsignatures   
-   ans <- gseaSignatures(x,signatures,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
+setMethod("gseaSignatures",signature(x="matrix",gsets="GeneSetCollection"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm') {
+   tmpgsets <- geneIds(gsets); names(tmpgsets) <- names(gsets); gsets <- tmpgsets   
+   ans <- gseaSignatures(x,gsets,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,list)
    return(ans)
  }
 )
 
-setMethod("gseaSignatures",signature(signatures="GeneSet"),
- function(x,signatures,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test) {
-   signatures <- geneIds(signatures)
-   ans <- gseaSignatures(x,signatures,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,character)
+setMethod("gseaSignatures",signature(gsets="GeneSet"),
+ function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test) {
+   gsets <- geneIds(gsets)
+   ans <- gseaSignatures(x,gsets,absVals=absVals,averageRepeats=averageRepeats,logScale,B,mc.cores,test) #call method( ,character)
    return(ans)
  }
 )
@@ -508,6 +512,8 @@ setMethod("getNes",signature(x="gseaSignaturesSign"),
       ans <- es / abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
       ans
     }
+    es <- getEs(x)
+    es.sim <- getEsSim(x)
     ans <- mapply(myFun, es=es,es.sim=es.sim)
     mynames <- colnames(ans)
     ans <- split(ans, 1:ncol(ans))
@@ -538,17 +544,17 @@ setMethod("getFcHr",signature(x="gseaSignaturesVar"),
 setMethod("show",signature(object="gseaSignaturesSign"),
   function (object) {
     cat("Object of class 'gseaSignaturesSign'\n")
-    cat("You can use the getEs, getEsSim and getFcHr methods to easily acces its data\n")
-    cat("-The tested signatures are:\n ",names(object[[1]]),'\n')
+    cat("You can use the getEs, getNes, getEsSim and getFcHr methods to easily acces its data\n")
+    cat("-The tested gene sets are:\n ",names(object[[1]]),'\n')
   }
 )
 
 setMethod("show",signature(object="gseaSignaturesVar"),
   function (object) {
     cat("Object of class 'gseaSignaturesVar'\n")
-    cat("You can use the getEs, getEsSim and getFcHr methods to easily acces its data\n")
+    cat("You can use the getEs, getNes, getEsSim and getFcHr methods to easily acces its data\n")
     cat("-The tested variables are:\n ",names(object),'\n')
-    cat("-The tested signatures (for each variable) are\n :",names(object[[1]][[1]]),'\n')
+    cat("-The tested gene sets (for each variable) are\n :",names(object[[1]][[1]]),'\n')
   }
 )
 
@@ -566,7 +572,7 @@ setMethod("gseaSignificance",signature(x="gseaSignaturesSign"),
   signatures <- lapply(y,function(x) x[['signature']])
   test <- x[['test']]
   fchr <- x[['fc.hr']]
-  ans <- getSummary(es,es.sim,fchr,p.adjust.method=p.adjust.method,pval.comp.method,pval.smooth.tail,signatures,test)
+  ans <- cbind(n=unlist(lapply(x$s,length)),getSummary(es,es.sim,fchr,p.adjust.method=p.adjust.method,pval.comp.method,pval.smooth.tail,signatures,test))
   if (any(is.na(ans))) warning('Some NAs were produced due to not having enough simulations with the same sign as the observed ES.')
   return(new("gseaSignificanceSign",list(summary=as.matrix(ans),p.adjust.method=p.adjust.method)))
  }
@@ -587,7 +593,7 @@ summary.gseaSignificanceVar <- function (object,...) {
   ans <- lapply(object,function(object) object[['summary']])
   idx <- rep(seq(1,length(ans),1),nrow(ans[[1]]))
   idx <- idx[order(idx)]
-  ans <- data.frame(variable=names(ans)[idx],signature=rownames(ans[[1]]),do.call('rbind',ans),row.names=NULL)
+  ans <- data.frame(variable=names(ans)[idx],geneSet=rownames(ans[[1]]),do.call('rbind',ans),row.names=NULL)
   return(ans)
 }
 
@@ -595,7 +601,7 @@ setMethod("show",signature(object="gseaSignificanceSign"),
   function (object) {
     cat("Object of class 'gseaSignificanceSign'\n")
     cat("You can use the summary method to easily acces its data\n")
-    cat("-The tested signatures are:\n",rownames(object[[1]]),'\n')
+    cat("-The tested gene sets are:\n",rownames(object[[1]]),'\n')
     cat("-P adjust method:",object[[2]],'\n')
   }
 )
@@ -605,7 +611,7 @@ setMethod("show",signature(object="gseaSignificanceVar"),
     cat("Object of class 'gseaSignificanceVar'\n")
     cat("You can use the summary method to easily acces its data\n")
     cat("-The tested variables are:\n",names(object),'\n')
-    cat("-The tested signatures (for each variable) are:\n",rownames(object[[1]][[1]]),'\n')
+    cat("-The tested gene sets (for each variable) are:\n",rownames(object[[1]][[1]]),'\n')
     cat("-P adjust method:",object[[1]][[2]],'\n')
   }
 )
@@ -626,7 +632,8 @@ plot.gseaSignaturesSign <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='
     nes.abs.max <- max(abs(summary(gseaSignificance)[,'nes']),na.rm=TRUE)
     nes.ylim <- c(-nes.abs.max,nes.abs.max)
   }
-  plotGseaPreprocess(x=x,y=gseaSignificance,z=x$signatures,es.ylim=es.ylim,nes.ylim=nes.ylim,test=test,es.nes=es.nes)
+  mysign <- x$signatures
+  plotGseaPreprocess(x=x,y=gseaSignificance,z=mysign,es.ylim=es.ylim,nes.ylim=nes.ylim,test=test,es.nes=es.nes)
 }
 
 plot.gseaSignaturesVar <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='both',...) {
@@ -640,5 +647,153 @@ plot.gseaSignaturesVar <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='b
     nes.abs.max <-max(abs(summary(gseaSignificance)[,'nes']),na.rm=TRUE)
     nes.ylim <- c(-nes.abs.max,nes.abs.max)
   }
-  for (i in 1:length(x)) plotGseaPreprocess(x=x[[i]],y=gseaSignificance[[i]],z=x[[i]]$signatures,variable=names(x)[i],es.ylim=es.ylim,nes.ylim=nes.ylim,test=test,es.nes=es.nes)
+  mysign <- x[[1]]$signatures
+  for (i in 1:length(x)) plotGseaPreprocess(x=x[[i]],y=gseaSignificance[[i]],z=mysign,variable=names(x)[i],es.ylim=es.ylim,nes.ylim=nes.ylim,test=test,es.nes=es.nes)
+}
+
+
+# 4.4 Methods for gseaData #
+############################
+
+checkGsetLen <- function(gsets,minGenes,maxGenes) {
+  gsets.len <- unlist(lapply(gsets,length))
+  if (any(gsets.len<minGenes)) {
+    warning(paste(sum(gsets.len<minGenes),' gene sets were removed due to having less than minGenes (',minGenes,') genes.',sep=''))
+    gsets <- gsets[gsets.len>=minGenes]
+  }
+  if (any(gsets.len>maxGenes)) {
+    warning(paste(sum(gsets.len>maxGenes),' gene sets were removed due to having more than maxGenes (',maxGenes,') genes.',sep=''))
+    gsets <- gsets[gsets.len<=maxGenes]
+  }
+  gsets
+}
+
+gsea <- function(x,gsets,logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000, mc.cores=1, test="perm",
+                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE, minGenes=10,maxGenes=500) {
+  gsets <- checkGsetLen(gsets,minGenes,maxGenes)
+  sim <- gseaSignatures(x=x, gsets=gsets, logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test)
+  pva <- gseaSignificance(sim, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail)
+  ans <- list(simulations=sim, significance=pva,gsetOrigin='User')
+  ans <- new('gseaData',ans)
+  return(ans)
+}
+
+gsea.go <- function(x,species='Hs', ontologies='MF', logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000, mc.cores=1, test="perm",
+                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE) {
+  if (class(x)=='numeric') {
+    x.names <- names(x)
+  } else if (class(x)=='matrix') {
+    x.names <- rownames(x)
+  } else if (class(x)=='epheno') {
+    x.names <- featureNames(x)
+  }
+  geo <- getGo(species, ontologies)
+  geo <- lapply(geo,function(x) x[x %in% x.names])
+  geo <- geo[unlist(lapply(geo,length))>0]
+  if (!any(x.names %in% unique(unlist(geo)))) stop('None of the identifiers in x exist in kegg:\nMake sure your identifiers are entrezids and that your data is at gene level!')
+  ans <- gsea(x=x, gsets=geo,logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail)
+  ans[['gsetOrigin']] <- 'GO'
+  return(ans)
+}
+
+gsea.kegg <- function(x,species='Hs',logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000, mc.cores=1, test="perm",
+                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE) {
+  stopifnot(class(x) %in% c('numeric','matrix','epheno'))
+  if (class(x)=='numeric') {
+    x.names <- names(x)
+  } else if (class(x)=='matrix') {
+    x.names <- rownames(x)
+  } else if (class(x)=='epheno') {
+    x.names <- featureNames(x)
+  }
+  kegg <- getKegg(species)
+  kegg <- lapply(kegg,function(x) x[x %in% x.names])
+  kegg <- kegg[unlist(lapply(kegg,length))>0]
+  if (!any(x.names %in% unique(unlist(kegg)))) stop('None of the identifiers in x exist in kegg:\nMake sure your identifiers are entrezids and that your data is at gene level!')
+  ans <- gsea(x=x, gsets=kegg,logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail)
+  ans[['gsetOrigin']] <- 'KEGG'
+  return(ans)
+}
+
+setMethod("show",signature(object="gseaData"),
+  function (object) {
+    cat("Object of class 'gseaData'\n")
+    cat("You can use the summary method to produce result summaries\n")
+    cat("You can use the getEs, getNes, getEsSim and getFcHr methods to easily acces its data\n")
+    cat("-The tested variables are:\n ",paste(names(object[[1]]),collapse=', '),'\n')
+    cat("-The tested gene sets (for each variable) are:\n",paste(names(object[[1]][[1]][[1]]),collapse=', '),'\n')
+  }
+)
+
+setMethod("getEs",signature(x="gseaData"),
+  function (x) {
+    getEs(x[[1]])
+  }
+)
+
+setMethod("getEsSim",signature(x="gseaData"),
+  function (x) {
+    getEsSim(x[[1]])
+  }
+)
+
+setMethod("getNes",signature(x="gseaData"),
+  function (x) {
+    getNes(x[[1]])
+  }
+)
+
+setMethod("getFcHr",signature(x="gseaData"),
+  function (x) {
+    getFcHr(x[[1]])
+  }
+)
+
+summary.gseaData <- function (object,...) {
+  summary(object[[2]])
+}
+
+gsea.selGsets <- function(x,selGsets) {
+  sim <- x[['simulations']]
+  pva <- x[['significance']]
+  if (class(sim)=='gseaSignaturesVar') {
+    sim <- lapply(sim,function(x) list(es.esSim=x$es.esSim[selGsets], fc.hr=x$fc.hr, signatures=x$signatures[selGsets], test=x$test))
+    sim <- new("gseaSignaturesVar",sim)
+  } else {
+    sim <- list(es.esSim=sim$es.esSim[selGsets], fc.hr=sim$fc.hr, signatures=sim$signatures[selGsets], test=sim$test)
+    sim <- new("gseaSignaturesSign",sim)
+  }
+  if (class(pva)=='gseaSignificanceVar') {
+    pva <- lapply(pva,function(x) list(summary=x$summary[selGsets,,drop=F], p.adjust.method=x$p.adjust.method))
+    pva <- new("gseaSignificanceVar",pva)
+  } else {
+    pva <- list(summary=pva$summary[selGsets,,drop=F], p.adjust.method=pva$p.adjust.method)
+    pva <- new("gseaSignificanceSign",pva)
+  }
+  ans <- new('gseaData',list(simulations=sim, significance=pva))
+  return(ans)
+}
+
+gsea.selVars <- function(x,selVars) {
+  sim <- x[['simulations']]
+  pva <- x[['significance']]
+  sim <- sim[selVars]
+  sim <- new("gseaSignaturesVar",sim)
+  pva <- pva[selVars]
+  pva <- new("gseaSignificanceVar",pva)
+  ans <- new('gseaData',list(simulations=sim, significance=pva))
+  return(ans)
+}
+
+plot.gseaData <- function(x,selGsets,selVars,...) {
+  if (!missing(selGsets)) {
+    if (class(x[[1]])=='gseaSignaturesVar') signatureNames <- names(x[[1]][[1]][['es.esSim']]) else signatureNames <- names(x[[1]][['es.esSim']])
+    stopifnot(!any(!selGsets %in% signatureNames))
+    x <- gsea.selGsets(x,selGsets)
+  }
+  if (!missing(selVars) & class(x[[1]])=='gseaSignaturesVar') {
+    stopifnot(!any(!selVars %in% names(x[[1]])))
+    x <- gsea.selVars(x,selVars)
+  }
+  plot(x[[1]],x[[2]],...)
 }

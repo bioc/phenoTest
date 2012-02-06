@@ -5,6 +5,9 @@
 ES' (enrichment scores) sifgnificance.
 }
 \description{
+This function has been deprecated. You could better use \code{gsea}
+instead.
+  
 This function performs the second step in the process of obtaining a
 GSEA-like plot.
 It computes the NES (normalized enrichment score), p values and fdr
