@@ -35,6 +35,9 @@ Aravind Subramanian, (October 25, 2005) \emph{Gene Set Enrichment Analysis}.
 \examples{
 #for examples see the help file of gseaSigntaures: ?gseaSignatures
 }
+\seealso{
+plot.gseaSignaturesSign, plot.gseaSignaturesVar
+}
 \author{
 Evarist Planet
 }

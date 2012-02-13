@@ -21,44 +21,6 @@ tmpTxt <- sub('TABLE','TABLE class="draggable sortable"',tmpTxt)
 writeLines(tmpTxt,con=filename)
 }
 
-getQuery4LOCALFILE <- function (ids) {
-#Get directory for LOCAL FILE
-    blanks <- ids == "&nbsp;"
-    out <- paste("LOCALFILE_",ids,".html",sep = "")
-    out <- sub(":","",out) #remove strange characters from file name
-    out[blanks] <- "&nbsp;"
-    return(out)
-}
-getQuery4miRBase <- function (ids) {
-#Get directory for miRBase
-    blanks <- ids == "&nbsp;"
-    out <- paste("http://microrna.sanger.ac.uk/cgi-bin/sequences/query.pl?terms=",ids,sep='')
-    out[blanks] <- "&nbsp"
-    return(out)
-}
-getQuery4BROAD <- function (ids) {
-#Get URL for BROAD gene set
-    blanks <- ids == "&nbsp;"
-    out <- paste("http://www.broad.mit.edu/gsea/msigdb/geneset_page.jsp?geneSetName=", ids, sep = "")
-    out[blanks] <- "&nbsp;"
-    return(out)
-}
-getQuery4MIRANDA <- function (ids) {
-#Get directory for miRBase
-    blanks <- ids == "&nbsp;"
-    out <- paste("http://microrna.sanger.ac.uk/cgi-bin/targets/v5/hit_list.pl?genome_id=native&mirna_id=",ids,sep='')
-    out[blanks] <- "&nbsp"
-    return(out)
-}
-getQuery4KEGG <- function (ids) {
-#Get URL for KEGG gene set
-    blanks <- ids == "&nbsp;"
-    ids <- gsub(" ","0",format(ids,width=5,justify='right'))  #zero-fill
-    out <- paste("http://www.genome.jp/dbget-bin/www_bget?pathway+ko",ids,sep="")
-    out[blanks] <- "&nbsp;"
-    return(out)
-}
-
 epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,withPlots=TRUE,mc.cores=1) {
   require(paste(annotation(x),'.db',sep=''),character.only = TRUE)
   stopifnot(annotation(x)==annotation(epheno))

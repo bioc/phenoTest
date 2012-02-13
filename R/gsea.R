@@ -657,14 +657,9 @@ plot.gseaSignaturesVar <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='b
 
 checkGsetLen <- function(gsets,minGenes,maxGenes) {
   gsets.len <- unlist(lapply(gsets,length))
-  if (any(gsets.len<minGenes)) {
-    warning(paste(sum(gsets.len<minGenes),' gene sets were removed due to having less than minGenes (',minGenes,') genes.',sep=''))
-    gsets <- gsets[gsets.len>=minGenes]
-  }
-  if (any(gsets.len>maxGenes)) {
-    warning(paste(sum(gsets.len>maxGenes),' gene sets were removed due to having more than maxGenes (',maxGenes,') genes.',sep=''))
-    gsets <- gsets[gsets.len<=maxGenes]
-  }
+  if (any(gsets.len<minGenes)) warning(paste(sum(gsets.len<minGenes),' gene sets were removed due to having less than minGenes (',minGenes,') genes.',sep=''))
+  if (any(gsets.len>maxGenes)) warning(paste(sum(gsets.len>maxGenes),' gene sets were removed due to having more than maxGenes (',maxGenes,') genes.',sep=''))
+  gsets <- gsets[gsets.len>=minGenes & gsets.len<=maxGenes] 
   gsets
 }
 
@@ -679,7 +674,7 @@ gsea <- function(x,gsets,logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1
 }
 
 gsea.go <- function(x,species='Hs', ontologies='MF', logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000, mc.cores=1, test="perm",
-                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE) {
+                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE,minGenes=10,maxGenes=500) {
   if (class(x)=='numeric') {
     x.names <- names(x)
   } else if (class(x)=='matrix') {
@@ -691,13 +686,13 @@ gsea.go <- function(x,species='Hs', ontologies='MF', logScale=TRUE, absVals=FALS
   geo <- lapply(geo,function(x) x[x %in% x.names])
   geo <- geo[unlist(lapply(geo,length))>0]
   if (!any(x.names %in% unique(unlist(geo)))) stop('None of the identifiers in x exist in kegg:\nMake sure your identifiers are entrezids and that your data is at gene level!')
-  ans <- gsea(x=x, gsets=geo,logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail)
+  ans <- gsea(x=x, gsets=geo,logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail, minGenes=minGenes, maxGenes=maxGenes)
   ans[['gsetOrigin']] <- 'GO'
   return(ans)
 }
 
 gsea.kegg <- function(x,species='Hs',logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000, mc.cores=1, test="perm",
-                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE) {
+                    p.adjust.method="none", pval.comp.method="original", pval.smooth.tail=TRUE,minGenes=10,maxGenes=500) {
   stopifnot(class(x) %in% c('numeric','matrix','epheno'))
   if (class(x)=='numeric') {
     x.names <- names(x)
@@ -710,7 +705,7 @@ gsea.kegg <- function(x,species='Hs',logScale=TRUE, absVals=FALSE, averageRepeat
   kegg <- lapply(kegg,function(x) x[x %in% x.names])
   kegg <- kegg[unlist(lapply(kegg,length))>0]
   if (!any(x.names %in% unique(unlist(kegg)))) stop('None of the identifiers in x exist in kegg:\nMake sure your identifiers are entrezids and that your data is at gene level!')
-  ans <- gsea(x=x, gsets=kegg,logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail)
+  ans <- gsea(x=x, gsets=kegg,logScale=logScale, absVals=absVals, averageRepeats=averageRepeats, B=B, mc.cores=mc.cores, test=test, p.adjust.method=p.adjust.method, pval.comp.method=pval.comp.method, pval.smooth.tail=pval.smooth.tail, minGenes=minGenes, maxGenes=maxGenes)
   ans[['gsetOrigin']] <- 'KEGG'
   return(ans)
 }
