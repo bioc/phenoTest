@@ -33,10 +33,12 @@ mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach) {
 }
 
 postprobBic <- function(exprs,formula) {
-  bic1 <- BIC(lm(eval(parse(text=gsub('\\+ as.numeric\\(tmpVar\\)','\\+1',gsub('\\+ tmpVar','\\+1',formula))))))
+  bic1 <- BIC(lm(eval(parse(text=gsub('\\+ as.numeric\\(tmpVar\\)','',gsub('\\+ tmpVar','',formula))))))
   bic2 <- BIC(lm(eval(parse(text=formula))))
-  bic <- exp(-0.5 * c(bic1,bic2))
-  ans <- bic[2] / sum(bic)
+  bic <- c(bic1,bic2)
+  ans <- (exp(-0.5 * (bic2 - min(bic))))/sum(exp(-0.5 * (bic - min(bic))))
+##   bic <- exp(-0.5 * c(bic1,bic2))
+##   ans <- bic[2] / sum(bic)
   return(ans)
 }
 
@@ -127,7 +129,8 @@ if (!is.null(vars2test$continuous)) {
       eb <- eBayes(contrasts.fit(lm1,contrasts=c(0,1,rep(0,ncol(design)-2))))
       signif$cont[,i] <- eb$F.p.value
     } else if (approach=='bayesian') {
-      myFormula <- gsub('~','~ +',paste('exprs',myFormula))
+      myFormula <- gsub('-1','+1',paste('exprs',myFormula))
+#      myFormula <- gsub('~','~ +',paste('exprs',myFormula))
       if (mc.cores==1) {
         signif$cont[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
       } else {
@@ -193,7 +196,8 @@ if (!is.null(vars2test$ordinal)) {
       eb <- eBayes(contrasts.fit(lm4p,contrasts=mycontrasts)) #to get signifs
       signif$ordi[,i] <- eb$F.p.value
     } else if (approach=='bayesian') {
-      myFormula4p <- gsub('~','~ +',paste('exprs',myFormula4p))
+      myFormula <- gsub('-1','+1',paste('exprs',myFormula))
+#      myFormula4p <- gsub('~','~ +',paste('exprs',myFormula4p))
       if (mc.cores==1) {
         signif$ordi[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula4p))
       } else {
@@ -251,7 +255,7 @@ if (!is.null(vars2test$categorical)) {
       eb <- eBayes(contrasts.fit(lm1,contrasts=mycontrasts))
       signif$categ[,i] <- eb$F.p.value
     } else if (approach=='bayesian') {
-      myFormula <- gsub('-1','',paste('exprs',myFormula))
+      myFormula <- gsub('-1','+1',paste('exprs',myFormula))
       if (mc.cores==1) {
         signif$categ[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
       } else {
