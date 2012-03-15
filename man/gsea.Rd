@@ -21,11 +21,12 @@ For an overview of the output use the \code{summary} method.
 \usage{
 gsea(x,gsets,logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000,
      mc.cores=1, test="perm",p.adjust.method="none",
-     pval.comp.method="original",pval.smooth.tail=TRUE,minGenes=10,maxGenes=500) 
+     pval.comp.method="original",pval.smooth.tail=TRUE,minGenes=10,
+     maxGenes=500,center=FALSE) 
 }
 \arguments{
 \item{x}{ \code{ePhenoTest}, \code{numeric} or \code{matrix} object
-  containing hazard ratios or fold changes.}
+  containing scores (hazard ratios or fold changes).}
 \item{gsets}{ character or list object containing the names of the
   genes that belong to each signature.}
 \item{logScale}{ if values should be log scaled.}
@@ -52,6 +53,8 @@ gsea(x,gsets,logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000,
   from the analysis.}
 \item{maxGenes}{ gene sets with more than maxGenes genes will be removed
   from the analysis.}
+\item{center}{ if we want to center scores (fold changes or hazard
+  ratios). The following is will be done: x = x-mean(x).}
 }
 \details{
 The following preprocessing was done on the provided scores (i.e. fold

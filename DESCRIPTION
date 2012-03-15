@@ -1,7 +1,7 @@
 Package: phenoTest
 Type: Package
 Title: Tools to test association between gene expression and phenotype in a way that is efficient, structured, fast and scalable. We also provide tools to do GSEA (Gene set enrichment analysis) and copy number variation.
-Version: 1.3.3
+Version: 1.3.4
 Date: 2010-04-28
 Author: Evarist Planet
 Maintainer: Evarist Planet <evarist.planet@irbbarcelona.org>

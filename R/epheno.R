@@ -10,7 +10,8 @@ mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach) {
   val <- try({
     if (adjustVarsTxt=='') myFormula <- "Surv(coxSurvTime, coxSurvEvent) ~ I(as.numeric(x))" else myFormula <- paste("Surv(coxSurvTime, coxSurvEvent) ~ ",adjustVarsTxt,"I(as.numeric(x))",sep=' + ')
     coxph1 <- coxph(eval(parse(text=myFormula)))
-    eCoef <- exp((abs(coef(coxph1)[1])))*sign(coef(coxph1)[1])
+    sel <- length(coefficients(coxph1))
+    eCoef <- exp((abs(coef(coxph1)[sel])))*sign(coef(coxph1)[sel])
     summaryDif <- eCoef
     if (approach=='frequentist') {
       tmp <- anova(coxph1)

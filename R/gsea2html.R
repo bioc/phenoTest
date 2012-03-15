@@ -2,6 +2,7 @@ gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotE
   #control errors
   stopifnot(class(gseaData)=='gseaData')
   stopifnot(class(epheno)=='epheno')
+  stopifnot(!missing(variable))
   stopifnot(variable %in% phenoNames(epheno))
   stopifnot(!missing(file))
   stopifnot(file.exists(path))
@@ -47,7 +48,8 @@ gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotE
   #gene set annotation
   if (gseaData$gsetOrigin=='KEGG') {
     envir <- eval(parse(text='KEGGPATHID2NAME'))
-    geneSetName <- unlist(AnnotationDbi::mget(gsub('mmu','',gsets[,'geneSet']),envir))
+    gsetname <- gsub('hsa','',gsub('mmu','',gsets[,'geneSet']))
+    geneSetName <- unlist(AnnotationDbi::mget(gsetname,envir))
     gsets <- data.frame(gsets[,1:2],geneSetName=geneSetName,gsets[,3:ncol(gsets)])
   } else if (gseaData$gsetOrigin=='GO') {
     geneSetName <- Term(as.character(gsets[,'geneSet']))

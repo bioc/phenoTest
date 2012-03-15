@@ -23,6 +23,8 @@ Objects can be created by calls of the form \code{new("gseaSignaturesSign", ...)
     \item{\code{gseaSignatures}:}{Object of class
       \code{"gseaSignatures"} This is the object that will contain the
       ES and ES.sim. }
+    \item{\code{es.sim.gam}:}{Object of class \code{"matrix"} enrichment
+      scores computed with the gam method. }
     \item{\code{fc.hr}:}{Object of class \code{"character"} fold change
       or hazard ratio used to compute the enrichment scores. }
     \item{\code{s}:}{Object of class \code{"logical"} The subset of

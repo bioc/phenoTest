@@ -19,7 +19,7 @@ setValidity("epheno", function(object){
 })
 
 setClass("gseaSignatures",contains="list",representation(es="numeric",es.sim="numeric",signature="numeric"))
-setClass("gseaSignaturesSign",contains="list",representation(gseaSignatures="gseaSignatures",fc.hr="character",s="logical",test='character'))
+setClass("gseaSignaturesSign",contains="list",representation(gseaSignatures="gseaSignatures",fc.hr="character",s="logical",es.sim.gam="matrix",test='character'))
 setClass("gseaSignaturesVar",contains="list",representation(gseaSignatures="gseaSignaturesSign"))
 setClass("gseaSignificanceSign",contains="list",representation(gseaSignificance="matrix",p.adjust.method="character"))
 setClass("gseaSignificanceVar",contains="list",representation(gseaSignificance="gseaSignificanceSign"))

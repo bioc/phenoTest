@@ -23,7 +23,8 @@ The \code{getEs}, \code{getEsSim}, \code{getFc}, \code{getHr} and
 information please visit the man pages of each method.
 }
 \usage{
-gseaSignatures(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test='perm')
+gseaSignatures(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,
+  B=1000,mc.cores=1,test='perm', minGenes=10,maxGenes=500,center=FALSE)
 }
 \arguments{
 \item{x}{ \code{ePhenoTest}, \code{numeric} or \code{matrix} object
@@ -42,6 +43,12 @@ gseaSignatures(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,m
 \item{test}{ the test that will be used. 'perm' stands for the permutation
   based method, 'wilcox' stands for the wilcoxon test (this is the fastest
   one) and 'ttperm' stands for permutation t test.}
+\item{minGenes}{ gene sets with less than minGenes genes will be removed
+  from the analysis.}
+\item{maxGenes}{ gene sets with more than maxGenes genes will be removed
+  from the analysis.}
+\item{center}{ if we want to center scores (fold changes or hazard
+  ratios). The following is will be done: x = x-mean(x).}
 }
 \details{
 The following preprocessing was done on the provided scores (i.e. fold changes, hazard
