@@ -44,7 +44,7 @@ gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotE
   #filter gsets
   gsets <- gsets[order(gsets$fdr),]
   if (limit<nrow(gsets)) gsets <- gsets[1:limit,]
-  
+
   #gene set annotation
   if (gseaData$gsetOrigin=='KEGG') {
     envir <- eval(parse(text='KEGGPATHID2NAME'))

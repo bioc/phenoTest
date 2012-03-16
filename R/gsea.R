@@ -158,11 +158,6 @@ getNesGam <- function(escore,gsets.len,es.sim) {
   return(ans)
 }
 
-getNesSim <- function(es.sim) {
-  nes.sim <- es.sim / ifelse(es.sim>0,mean(es.sim[es.sim>0]),-mean(es.sim[es.sim<0]))
-  return(nes.sim)
-}
-
 getNesSimGam <- function(es.sim) {
   es.pos.mean <- apply(es.sim,2,function(x) mean(x[x>0]))
   es.neg.mean <- apply(es.sim,2,function(x) mean(x[x<0]))
@@ -172,6 +167,11 @@ getNesSimGam <- function(es.sim) {
   es.sim.mean.neg <- (t(apply(sel.neg,1,function(x) as.numeric(x) * as.numeric(es.neg.mean))))
   es.sim.mean <- es.sim.mean.pos - es.sim.mean.neg
   nes.sim <- as.numeric(es.sim / es.sim.mean)
+  return(nes.sim)
+}
+
+getNesSim <- function(es.sim) {
+  nes.sim <- es.sim / ifelse(es.sim>0,mean(es.sim[es.sim>0]),-mean(es.sim[es.sim<0]))
   return(nes.sim)
 }
 
@@ -407,7 +407,7 @@ plotGSEA <- function(es.nes,fc.hr,s,mainTitle='',variable='',pvalfdr,p.adjust.me
   par(def.par)
 }
 
-plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes) {
+plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gsets.len) {
   if (test=='wilcox') es.nes <- 'es'
   if (class(z)=='list') {
     gsl <- x[[1]]
@@ -497,10 +497,13 @@ setMethod("gseaSignatures",signature(x="numeric",gsets="list"),
   gsets <- selSignatures(x,gsets)
   gsets <- checkGsetLen(gsets,minGenes,maxGenes)
   if (test=='perm') checkGsetSimmetry(x,gsets,test,B)
-  if (length(gsets)>=10 & test=='perm') {
+  numDifLen <- length(unique(unlist(lapply(gsets,length))))
+  if (numDifLen>10 & test=='perm') {
+    cat('The provided gene sets have more than 10 distinct lengths, therefore gam aproximation will be used.\n')
     ans <- lapply(gsets,function(y) getSourceData(x=x,s=y,B=ceiling(B/length(gsets)),mc.cores=mc.cores,test=test,compute.es.sim=FALSE))
     es.sim.gam <- getEsSimGam(x,gsets,B,mc.cores)
   } else {
+    tellNumPerm(B,gsets)
     ans <- lapply(gsets,function(y) getSourceData(x=x,s=y,B=ceiling(B/length(gsets)),mc.cores=mc.cores,test=test,compute.es.sim=TRUE))    
     es.sim.gam <- NA
   }
@@ -759,7 +762,6 @@ plot.gseaSignaturesVar <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='b
 
 gsea <- function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test="perm",p.adjust.method="none",
                  pval.comp.method="original",pval.smooth.tail=TRUE,minGenes=10,maxGenes=500,center=FALSE) {
-  tellNumPerm(B,gsets)
   sim <- gseaSignatures(x=x,gsets=gsets,logScale=logScale,absVals=absVals,averageRepeats=averageRepeats,B=B,mc.cores=mc.cores,test=test,minGenes=minGenes,maxGenes=maxGenes,center=center)
   pva <- gseaSignificance(sim,p.adjust.method=p.adjust.method,pval.comp.method=pval.comp.method,pval.smooth.tail=pval.smooth.tail)
   ans <- list(simulations=sim,significance=pva,gsetOrigin='User')

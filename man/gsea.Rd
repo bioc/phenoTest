@@ -17,6 +17,17 @@ information please visit the man pages of each method.
 It also computes the NES (normalized enrichment score), p values and fdr
 (false discovery rate) for all variables and signatures.
 For an overview of the output use the \code{summary} method.
+
+In case of providing gene sets which have more than 10 distinct lengths
+an approximation of the calculation of the enrichment score simulations
+(ESM) will be computed.
+The value of the ESM only depends on the length of the gene
+set. Therefore we compute the ESM over a grid of possible gene set
+lengths which are representative of the lengths of the provided gene
+sets. Then we fit a generalized additive model model with cubic splines
+to predict the NES value based on the length of every gene set. This
+provides a much faster approach that can be very useful when we need to
+run the software over a huge number of gene sets.
 }
 \usage{
 gsea(x,gsets,logScale=TRUE, absVals=FALSE, averageRepeats=FALSE, B=1000,
