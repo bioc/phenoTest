@@ -109,7 +109,7 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
           if (ncol(x)>20) {
             boxplot(as.numeric(exprs(x[i,])) ~ as.factor(pData(x)[,varName.event]),ylab='Expression level',xlab=varName.time)
           } else {
-            dotchart(as.numeric(exprs(x[i,])),as.factor(pData(x)[,varName.event]),xlab='Expression level',ylab=varName.time,col=as.numeric(as.factor(pData(x)[,varName.event]))+1,groups=as.factor(pData(x)[,varName.event]))
+            dotchart(as.numeric(exprs(x[i,])),as.factor(pData(x)[,varName.event]),xlab='Expression level',ylab=varName.time,color=as.numeric(as.factor(pData(x)[,varName.event]))+1,groups=as.factor(pData(x)[,varName.event]))
           }
         } else if (varType=='continuous') {
           mylevels <- levels(pData(epheno)[pData(epheno)$phenoName==varName,'meanLabel'])
@@ -126,13 +126,13 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
           if (ncol(x)>20) {
             boxplot(as.numeric(exprs(x[i,])) ~ myCateg,ylab='Expression level',xlab=varName)
           } else {
-            dotchart(as.numeric(exprs(x[i,])),as.factor(myCateg),xlab='Expression level',ylab=varName,col=as.numeric(as.factor(myCateg))+1,groups=as.factor(myCateg))
+            dotchart(as.numeric(exprs(x[i,])),as.factor(myCateg),xlab='Expression level',ylab=varName,color=as.numeric(as.factor(myCateg))+1,groups=as.factor(myCateg))
           }
         } else {
           if (ncol(x)>20) {
             boxplot(as.numeric(exprs(x[i,])) ~ as.factor(pData(x)[,varName]),ylab='Expression level',xlab=varName)
           } else {
-            dotchart(as.numeric(exprs(x[i,])),as.factor(pData(x)[,varName]),xlab='Expression level',ylab=varName,col=as.numeric(as.factor(pData(x)[,varName]))+1,groups=as.factor(pData(x)[,varName]))
+            dotchart(as.numeric(exprs(x[i,])),as.factor(pData(x)[,varName]),xlab='Expression level',ylab=varName,color=as.numeric(as.factor(pData(x)[,varName]))+1,groups=as.factor(pData(x)[,varName]))
           }
         }
         title(paste(ifelse(approach(epheno)=='frequentist','p-value','postProb'),ifelse(getSignif(epheno)[i,]<.0001,'<0.0001',paste('=',round(getSignif(epheno)[i,],4),sep='')),sep=''))
@@ -162,7 +162,7 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
         tiny.pic[[ifelse(id.entrezid,6,7)]] <- links[[ifelse(id.entrezid,6,7)]] <- paste('phenoPlots/',varName,'/smooth_',gsub('/','_',featureNames(x)),'.png',sep='')
       }
     }
-    file <- paste(outputdir,'/',prefix,varType,'_',varName,'.html',sep='')
+    file <- paste(outputdir,'/',prefix,'_',varType,'_',varName,'.html',sep='')
     title <- paste(varName,' (',varType,' variable)',sep='')
     write.html(xout,file=file,links=links,tiny.pic=tiny.pic,title=title)
   }

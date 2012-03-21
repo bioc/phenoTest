@@ -395,7 +395,7 @@ plotGSEA <- function(es.nes,fc.hr,s,mainTitle='',variable='',pvalfdr,p.adjust.me
   #plot
   def.par <- par(no.readonly = TRUE)
   par(mar=c(1,4,2,1))
-  layout(c(1,2,3,4),height=c(4,2,1,2))
+  layout(c(1,2,3,4),heights=c(4,2,1,2))
   if (test=='perm') {
     plot1.perm(es.nes,myYlim,mainTitle=mainTitle.es,EsOrNes=EsOrNes)
   } else {

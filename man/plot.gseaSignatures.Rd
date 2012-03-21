@@ -14,12 +14,10 @@ the \code{gseaSignificance} function).
 }
 \usage{
 plot.gseaSignaturesSign(x,gseaSignificance,es.ylim,nes.ylim,es.nes="both",...)
-plot.gseaSignaturesVar(x,gseaSignificance,es.ylim,nes.ylim,es.nes="both",...)
 }
 \arguments{
 \item{x}{ object of class \code{gseaSignaturesSign} or
-  \code{gseaSignatures
-    Var}.}
+  \code{gseaSignaturesVar}.}
 \item{gseaSignificance}{ object of class \code{gseaSignificanceSign} or \code{gseaSignificanceVar}.}
 \item{es.ylim}{ ylim values for the ES plot.}
 \item{nes.ylim}{ ylim values for the NES plot.}

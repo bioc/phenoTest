@@ -175,7 +175,7 @@ plotCopyNumber <- function(es,chr,pos,obs.pred,ssr,es.mean,genome,chrLengths) {
   if (plotCyto) {
     def.par <- par(no.readonly = TRUE)    
     par(mar=c(1,3,1.5,1))
-    layout(c(1,2),height=c(2.5,0.5))
+    layout(c(1,2),heights=c(2.5,0.5))
   }
   plot(pos,es,pch=20,main=paste("chr",chr),col=densCols(pos,es),xlab='Position in chromosome (Mb)',ylab='Expression Score',xlim=xlim/1e6)
   if (!missing(obs.pred)) lines(pos[order(pos)],obs.pred,col='darkred',lwd=2)

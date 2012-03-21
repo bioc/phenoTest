@@ -12,7 +12,6 @@ containing the ES, NES, pval.ES, pval.NES and FDR.
 }
 \usage{
 summary.gseaSignificanceSign(object,...)
-summary.gseaSignificanceVar(object,...)
 }
 \arguments{
 \item{object}{ object of class \code{gseaSignificanceSign} or \code{gseaSignificanceVar}.}
