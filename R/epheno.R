@@ -415,8 +415,8 @@ setMethod("[",signature(x="epheno"),
   function (x, i, j) {
     if (!missing(i)) {
       if (class(i)=="character") {
-        sel <- featureNames(x) %in% i
-        exprs(x) <- exprs(x)[sel,,drop=FALSE]
+        stopifnot(any(i %in% featureNames(x)))
+        exprs(x) <- exprs(x)[i,,drop=FALSE]
       } else if (class(i)=="numeric" | class(i)=="integer") {
         if (any(c(i<1, i>nrow(x)))) stop('Error: subscript out of bounds')
         exprs(x) <- exprs(x)[i,,drop=FALSE]
@@ -452,7 +452,7 @@ setMethod("getMeans",signature(x="epheno"),
 setGeneric("getSignif",function (x) standardGeneric("getSignif"))
 setMethod("getSignif",signature(x="epheno"),
   function (x) {
-    sel <- pData(x)$phenoType=="signif"
+    sel <- pData(x)$phenoType %in% c("signif","pval")
     return(exprs(x)[,sel,drop=FALSE])
   }
 )

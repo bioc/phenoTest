@@ -177,7 +177,10 @@ getNesSim <- function(es.sim) {
 
 getNesObs <- function(escore,es.sim) {
   if (any(sign(es.sim)==sign(escore))) {
-    ms <- abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
+    es.sim.pos.mean <- mean(es.sim[sign(es.sim)==1])
+    es.sim.neg.mean <- -mean(es.sim[sign(es.sim)==(-1)])
+#    ms <- abs(mean(es.sim[sign(es.sim)==sign(escore)],na.rm=TRUE))
+    ms <- ifelse(escore>0,es.sim.pos.mean,es.sim.neg.mean)
     nes <- escore / ms
   } else {
     nes <- NA
