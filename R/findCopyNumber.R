@@ -210,12 +210,12 @@ qcPlot <- function(ids,x,B,sim.pred,minGenes=10) {
   dev.off()
 }
 
-findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0.05,exprScorecutoff=NA,mc.cores=1,useAllPerm=F,genome='hg19',chrLengths,sampleGenome=TRUE,useOneChr=FALSE,useIntegrate=TRUE,plot=TRUE) {
+findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0.05,exprScorecutoff=NA,mc.cores=1,useAllPerm=F,genome='hg19',chrLengths,sampleGenome=TRUE,useOneChr=FALSE,useIntegrate=TRUE,plot=TRUE,minGenesPerChr=100) {
   #Input has to be a data frame with gene ids as rownames and 3 columns: es (enrichment score), chr (chromosome) and pos (position in chromosome)
   stopifnot(identical(colnames(x),c('es','chr','pos')))
   #remove chr with less than 100 es
   if (any(table(x$chr)<100)) {
-    sel.chr <- names(table(x$chr))[table(x$chr)>100]
+    sel.chr <- names(table(x$chr))[table(x$chr)>minGenesPerChr]
     x <- x[x$chr %in% sel.chr,]
     warning('Chromosomes with less than 100 scores have been removed from the analysis.')
   }

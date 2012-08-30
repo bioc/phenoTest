@@ -14,7 +14,7 @@
 findCopyNumber(x, minGenes = 15, B = 100, p.adjust.method = "BH",
 pvalcutoff = 0.05, exprScorecutoff = NA, mc.cores = 1, useAllPerm = F,
 genome = "hg19", chrLengths, sampleGenome = TRUE, useOneChr = FALSE,
-useIntegrate = TRUE,plot=TRUE)
+useIntegrate = TRUE,plot=TRUE,minGenesPerChr=100)
 }
 \arguments{
   \item{x}{
@@ -97,6 +97,10 @@ useIntegrate = TRUE,plot=TRUE)
   }
   \item{plot}{
     If FALSE the function will make no plots.
+  }
+  \item{minGenesPerChr}{
+    Chromosomes with less than \code{minGenesPerChr} will be removed
+    from the analysis.
   }
 }
 \details{
