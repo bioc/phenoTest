@@ -421,7 +421,7 @@ setMethod("[",signature(x="epheno"),
         if (any(c(i<1, i>nrow(x)))) stop('Error: subscript out of bounds')
         exprs(x) <- exprs(x)[i,,drop=FALSE]
       } else if (class(i)=="logical") {
-        exprs(x) <- x[which(i),,drop=FALSE]
+        exprs(x) <- exprs(x)[which(i),,drop=FALSE]
       }
     }
     if (!missing(j)) {

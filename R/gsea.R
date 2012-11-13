@@ -159,8 +159,8 @@ getNesGam <- function(escore,gsets.len,es.sim) {
 }
 
 getNesSimGam <- function(es.sim) {
-  es.pos.mean <- apply(es.sim,2,function(x) mean(x[x>0]))
-  es.neg.mean <- apply(es.sim,2,function(x) mean(x[x<0]))
+  es.pos.mean <- apply(es.sim,2,function(x) mean(x[x>0],na.rm=T))
+  es.neg.mean <- apply(es.sim,2,function(x) mean(x[x<0],na.rm=T))
   sel.pos <- ifelse(es.sim>0,1,0)
   sel.neg <- ifelse(es.sim<0,1,0)
   es.sim.mean.pos <- (t(apply(sel.pos,1,function(x) as.numeric(x) * as.numeric(es.pos.mean))))
@@ -439,7 +439,8 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gs
               warning('Too few simulations with the same sign as ES were obtained in some signature(s). NAs will be assigned to nes.')
             }
           } else {
-            nes <- getNesGam(es,es.sim)
+            gsets.len <- unlist(lapply(x$signatures,length))
+            nes <- getNesGam(es,gsets.len,es.sim=es.sim)
           }
           plotGSEA(es.nes=nes,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=y[[1]][i,][['fdr']],p.adjust.method=y[[2]],EsOrNes='NES',es.nes.ylim=nes.ylim,test=test)
         }
