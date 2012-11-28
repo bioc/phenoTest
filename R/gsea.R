@@ -423,7 +423,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gs
       myTitle <- paste(ifelse(missing(variable),'',paste('variable:',variable,' / ',sep='')),'signature:', names(z)[i],sep='')
       if (es.nes %in% c('es','both')) {
         #es plot
-        if (test!='perm') pvalfdr <- y$summary[i,'pval'] else pvalfdr <- y$summary[i,][['pval.es']]
+        if (test!='perm') pvalfdr <- y$summary[i,'fdr'] else pvalfdr <- y$summary[i,][['pval.nes']]
         plotGSEA(es.nes=es,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=pvalfdr,p.adjust.method=y[[2]],EsOrNes='ES',es.nes.ylim=es.ylim,test=test)
       }
       if (es.nes %in% c('nes','both')) {
@@ -439,8 +439,8 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gs
               warning('Too few simulations with the same sign as ES were obtained in some signature(s). NAs will be assigned to nes.')
             }
           } else {
-            gsets.len <- unlist(lapply(x$signatures,length))
-            nes <- getNesGam(es,gsets.len,es.sim=es.sim)
+            gsets.len <- as.numeric(colnames(es.sim))
+            nes <- es / abs(getNesGam(escore,gsets.len,es.sim=es.sim))
           }
           plotGSEA(es.nes=nes,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=y[[1]][i,][['fdr']],p.adjust.method=y[[2]],EsOrNes='NES',es.nes.ylim=nes.ylim,test=test)
         }
@@ -503,7 +503,7 @@ setMethod("gseaSignatures",signature(x="numeric",gsets="list"),
   if (test=='perm') checkGsetSimmetry(x,gsets,test,B)
   numDifLen <- length(unique(unlist(lapply(gsets,length))))
   if (numDifLen>10 & test=='perm') {
-    cat('The provided gene sets have more than 10 distinct lengths, therefore gam aproximation will be used.\n')
+    cat('The provided gene sets have more than 10 distinct lengths, therefore gam approximation will be used.\n')
     ans <- lapply(gsets,function(y) getSourceData(x=x,s=y,B=ceiling(B/length(gsets)),mc.cores=mc.cores,test=test,compute.es.sim=FALSE))
     es.sim.gam <- getEsSimGam(x,gsets,B,mc.cores)
   } else {
@@ -870,7 +870,7 @@ gsea.selGsets <- function(x,selGsets) {
     sim <- lapply(sim,function(x) list(es.esSim=x$es.esSim[selGsets], fc.hr=x$fc.hr, signatures=x$signatures[selGsets], test=x$test))
     sim <- new("gseaSignaturesVar",sim)
   } else {
-    sim <- list(es.esSim=sim$es.esSim[selGsets], fc.hr=sim$fc.hr, signatures=sim$signatures[selGsets], test=sim$test)
+    sim <- list(es.esSim=sim$es.esSim[selGsets], fc.hr=sim$fc.hr, signatures=sim$signatures[selGsets], test=sim$test, es.sim.gam=sim$es.sim.gam)
     sim <- new("gseaSignaturesSign",sim)
   }
   if (class(pva)=='gseaSignificanceVar') {

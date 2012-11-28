@@ -98,7 +98,7 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
           title(paste(ifelse(approach(epheno)=='frequentist','p-value','postProb'),ifelse(getSignif(epheno)[i,]<.0001,'<0.0001',paste('=',round(getSignif(epheno)[i,],4),sep='')),sep=''))
           dev.off()
           png(paste(dirOut,'/smooth_',gsub('/','_',featureNames(x)[i]),'.png',sep=''))
-          smoothCoxph(pData(x)[,varName.time],pData(x)[,varName.event],as.numeric(exprs(x[i,])))
+          dummy <- try(smoothCoxph(pData(x)[,varName.time],pData(x)[,varName.event],as.numeric(exprs(x[i,]))),silent=T)
           dev.off()
         }
         lapply(as.list(1:nrow(x)),myFun)
