@@ -320,7 +320,7 @@ in Figure \ref{fig:heatmap} and \ref{fig:kaplan}.
 \begin{scriptsize}
 \setkeys{Gin}{width=0.6\textwidth} 
 <<label=heatmapPhenoTestHeat,include=FALSE>>=
-pvals <- heatmapPhenoTest(eset,mySignature[[1]],vars2test=vars2test,heat.kaplan='heat')
+pvals <- heatmapPhenoTest(eset,mySignature[[1]],vars2test=vars2test[1],heat.kaplan='heat')
 @ 
 
 \begin{scriptsize}
@@ -345,7 +345,7 @@ pvals
 \begin{scriptsize}
 \setkeys{Gin}{width=0.6\textwidth} 
 <<label=heatmapPhenoTestKaplan,include=FALSE>>=
-pvals <- heatmapPhenoTest(eset,mySignature[[1]],vars2test=vars2test,heat.kaplan='kaplan')
+pvals <- heatmapPhenoTest(eset,mySignature[[1]],vars2test=vars2test[1],heat.kaplan='kaplan')
 @ 
 
 \begin{scriptsize}
