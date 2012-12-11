@@ -423,7 +423,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gs
       myTitle <- paste(ifelse(missing(variable),'',paste('variable:',variable,' / ',sep='')),'signature:', names(z)[i],sep='')
       if (es.nes %in% c('es','both')) {
         #es plot
-        if (test!='perm') pvalfdr <- y$summary[i,'fdr'] else pvalfdr <- y$summary[i,][['pval.nes']]
+        if (test!='perm') pvalfdr <- y$summary[i,'pval'] else pvalfdr <- y$summary[i,][['pval.nes']]
         plotGSEA(es.nes=es,fc.hr=fc.hr,s=s,mainTitle=myTitle,variable=ifelse(missing(variable),'',variable),pvalfdr=pvalfdr,p.adjust.method=y[[2]],EsOrNes='ES',es.nes.ylim=es.ylim,test=test)
       }
       if (es.nes %in% c('nes','both')) {

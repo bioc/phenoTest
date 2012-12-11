@@ -1,3 +1,5 @@
+VERSION 1.7.3
+- plot method for gseaData object did not work when wilcox method was used.
 VERSION 1.7.2
 - gseaData object subsetting was not correct when the object was created using the gam approximation.
 VERSION 1.7.1
