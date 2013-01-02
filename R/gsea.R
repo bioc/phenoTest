@@ -161,6 +161,8 @@ getNesGam <- function(escore,gsets.len,es.sim) {
 getNesSimGam <- function(es.sim) {
   es.pos.mean <- apply(es.sim,2,function(x) mean(x[x>0],na.rm=T))
   es.neg.mean <- apply(es.sim,2,function(x) mean(x[x<0],na.rm=T))
+  es.pos.mean[is.nan(es.pos.mean)] <- 0
+  es.neg.mean[is.nan(es.neg.mean)] <- 0
   sel.pos <- ifelse(es.sim>0,1,0)
   sel.neg <- ifelse(es.sim<0,1,0)
   es.sim.mean.pos <- (t(apply(sel.pos,1,function(x) as.numeric(x) * as.numeric(es.pos.mean))))
