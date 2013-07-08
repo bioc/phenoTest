@@ -1,3 +1,7 @@
+VERSION 1.9.1
+- ExpressioPhenoTest now does pairwise comparison when categorical variables are provided.
+- In GSEA simmetry of scores is not checked if they all have the same sign.
+- In GSEA if we use the option center=TRUE median is used instead of mean (which was used in previous versions).
 VERSION 1.7.4
 - Avoid gam method from returning NaN when no simulations with the same sign as NES where generated.
 VERSION 1.7.3

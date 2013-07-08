@@ -23,7 +23,7 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,cente
   x <- x[!is.na(as.character(names(x)))]
   x <- x[order(x,decreasing=TRUE)]  
   if (logScale) x <- ifelse(x==0,0,log(abs(x)) * sign(x)) #else x <- ifelse(x==0,0,x)
-  if (center) x <- x-mean(x)
+  if (center) x <- x-median(x)
   return(x)
 }
 
@@ -502,7 +502,7 @@ setMethod("gseaSignatures",signature(x="numeric",gsets="list"),
   x <- preProcessX(x,logScale=logScale,absVals=absVals,averageRepeats=averageRepeats,center=center)
   gsets <- selSignatures(x,gsets)
   gsets <- checkGsetLen(gsets,minGenes,maxGenes)
-  if (test=='perm') checkGsetSimmetry(x,gsets,test,B)
+  if (test=='perm' & any(x>0) & any(x<0)) checkGsetSimmetry(x,gsets,test,B)
   numDifLen <- length(unique(unlist(lapply(gsets,length))))
   if (numDifLen>10 & test=='perm') {
     cat('The provided gene sets have more than 10 distinct lengths, therefore gam approximation will be used.\n')

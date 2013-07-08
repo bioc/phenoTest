@@ -34,6 +34,7 @@ mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach) {
 }
 
 postprobBic <- function(exprs,formula) {
+  browser()
   bic1 <- BIC(lm(eval(parse(text=gsub('\\+ as.numeric\\(tmpVar\\)','',gsub('\\+ tmpVar','',formula))))))
   bic2 <- BIC(lm(eval(parse(text=formula))))
   bic <- c(bic1,bic2)
@@ -198,7 +199,6 @@ if (!is.null(vars2test$ordinal)) {
       signif$ordi[,i] <- eb$F.p.value
     } else if (approach=='bayesian') {
       myFormula <- gsub('-1','+1',paste('exprs',myFormula))
-#      myFormula4p <- gsub('~','~ +',paste('exprs',myFormula4p))
       if (mc.cores==1) {
         signif$ordi[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula4p))
       } else {
@@ -225,7 +225,7 @@ if (!is.null(vars2test$categorical)) {
   survTime <- c(survTime,rep(NA,sum(2*nc+-1)))
     
   summaryDif$categ <- matrix(NA,nrow=nrow(x),ncol=sum(nc)+sum(fc))
-  signif$categ <- matrix(NA,nrow=nrow(x),ncol=length(vars2test$categorical)); colnames(signif$categ) <- vars2test$categorical
+  signif$categ <- matrix(NA,nrow=nrow(x),ncol=sum(fc)); colnames(signif$categ) <- paste('tmp', 1:ncol(signif$categ))
   mynames <- character(0)
   for (i in 1:length(vars2test$categorical)) {
     cat(paste('\nPerforming analysis for categorical variable ',vars2test$categorical[i],' ',sep=''))
@@ -239,7 +239,7 @@ if (!is.null(vars2test$categorical)) {
     myLevels <- levels(tmpVar)
     myLevels <- myLevels[myLevels!='']
     meanLabel <- c(meanLabel,myLevels,rep(NA,length(myLevels)-1))
-    phenoClass.signif <- c(phenoClass.signif,'categorical')
+    phenoClass.signif <- c(phenoClass.signif,rep('categorical', fc[i]))
 
     colsel <- !is.na(pData(x)[,vars2test$categorical[i]]) & pData(x)[,vars2test$categorical[i]]!=''
     tmpVar <- tmpVar[colsel]
@@ -254,11 +254,16 @@ if (!is.null(vars2test$categorical)) {
     if (approach=='frequentist') {
       mycontrasts <- rbind(rep(-1,nlevels(tmpVar)-1),diag(nlevels(tmpVar)-1),matrix(0,nrow=ncol(design)-nlevels(tmpVar),ncol=nlevels(tmpVar)-1))
       eb <- eBayes(contrasts.fit(lm1,contrasts=mycontrasts))
-      signif$categ[,i] <- eb$F.p.value
+      tmpSignif <- eb$p.value
     } else if (approach=='bayesian') {
       myFormula <- gsub('-1','+1',paste('exprs',myFormula))
       if (mc.cores==1) {
-        signif$categ[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
+        signif$categ[,i] <- apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula))
+##         tmpSignif <- matrix(nrow=nrow(x), ncol=length(levels(tmpVar))-1)
+##         for (j in 2:length(levels(tmpVar))) {
+##           sel <- tmpVar %in% levels(tmpVar)[c(1, j)]
+##           tmpSignif[,i] <- apply(exprs(x[,colsel][, sel]),1,function(x) postprobBic(x,formula=myFormula))
+##         }
       } else {
         if ('multicore' %in% loadedNamespaces()) {
           signif$categ[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
@@ -273,8 +278,10 @@ if (!is.null(vars2test$categorical)) {
     refCol <- summaryDif$categ[,ncCoef[i]+fcCoef[i]]
     selCol <- summaryDif$categ[,(ncCoef[i]+fcCoef[i]+1):(ncCoef[i]+fcCoef[i]+ncol(tmpCoef)-1)]
     summaryDif$categ[,(ncCoef[i]+fcCoef[i]+nc[i]):(ncCoef[i]+fcCoef[i]+nc[i]+(fc[i]-1))] <- 2^(abs(selCol-refCol))*ifelse(selCol-refCol<0,-1,1)
+    signif$categ[, (fcCoef[i]+1):fcCoef[i+1]] <- tmpSignif
   }
   colnames(summaryDif$categ) <- mynames
+  colnames(signif$categ) <- gsub('.fc$', '.pval', mynames[grepl('.fc$', mynames)])
 }
 
 if (!is.null(vars2test$survival)) {
