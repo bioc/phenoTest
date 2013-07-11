@@ -34,7 +34,6 @@ mycoxph <- function(x,eset,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach) {
 }
 
 postprobBic <- function(exprs,formula) {
-  browser()
   bic1 <- BIC(lm(eval(parse(text=gsub('\\+ as.numeric\\(tmpVar\\)','',gsub('\\+ tmpVar','',formula))))))
   bic2 <- BIC(lm(eval(parse(text=formula))))
   bic <- c(bic1,bic2)
