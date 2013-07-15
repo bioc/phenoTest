@@ -175,9 +175,9 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
   if (mc.cores==1) {
     dummy <- lapply(varName, myFun)
   } else {
-    if ('multicore' %in% loadedNamespaces()) {
-      dummy <- multicore::mclapply(varName, myFun, mc.cores=mc.cores)
-    } else stop('multicore library has not been loaded!')
+    if ('parallel' %in% loadedNamespaces()) {
+      dummy <- parallel::mclapply(varName, myFun, mc.cores=mc.cores)
+    } else stop('parallel library has not been loaded!')
   }
 
   ##TO DEBUG USE for INSTEAD OF mclapply

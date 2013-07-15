@@ -90,9 +90,9 @@ getEsSimulations <- function(x,s,B,mc.cores) {
   if (mc.cores==1) {
     es.sim <- unlist(lapply(s.rand,myFun2))      
   } else {
-    if ('multicore' %in% loadedNamespaces()) {
-      es.sim <- unlist(multicore::mclapply(s.rand,myFun2,mc.set.seed=FALSE,mc.preschedule=TRUE,mc.cores=mc.cores))
-    } else stop('multicore library has not been loaded!')
+    if ('parallel' %in% loadedNamespaces()) {
+      es.sim <- unlist(parallel::mclapply(s.rand,myFun2,mc.set.seed=FALSE,mc.preschedule=TRUE,mc.cores=mc.cores))
+    } else stop('parallel library has not been loaded!')
   }
   return(es.sim)
 }

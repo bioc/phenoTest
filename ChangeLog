@@ -1,4 +1,8 @@
 VERSION 1.9.1
+- Change multicore to parallel.
+VERSION 1.9.2
+- Upgrade version.
+VERSION 1.9.1
 - ExpressioPhenoTest now does pairwise comparison when categorical variables are provided.
 - In GSEA simmetry of scores is not checked if they all have the same sign.
 - In GSEA if we use the option center=TRUE median is used instead of mean (which was used in previous versions).

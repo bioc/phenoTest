@@ -135,9 +135,9 @@ if (!is.null(vars2test$continuous)) {
       if (mc.cores==1) {
         signif$cont[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
       } else {
-        if ('multicore' %in% loadedNamespaces()) {
-          signif$cont[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y,1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
-        } else stop('multicore library has not been loaded!')
+        if ('parallel' %in% loadedNamespaces()) {
+          signif$cont[,i] <- unlist(parallel::mclapply(exprs.list,function(y) apply(y,1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
+        } else stop('parallel library has not been loaded!')
       }
     }
   }
@@ -201,9 +201,9 @@ if (!is.null(vars2test$ordinal)) {
       if (mc.cores==1) {
         signif$ordi[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula4p))
       } else {
-        if ('multicore' %in% loadedNamespaces()) {
-          signif$ordi[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula4p)),mc.cores=mc.cores))
-        } else stop('multicore library has not been loaded!')
+        if ('parallel' %in% loadedNamespaces()) {
+          signif$ordi[,i] <- unlist(parallel::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula4p)),mc.cores=mc.cores))
+        } else stop('parallel library has not been loaded!')
       }
     }
   }
@@ -264,9 +264,9 @@ if (!is.null(vars2test$categorical)) {
 ##           tmpSignif[,i] <- apply(exprs(x[,colsel][, sel]),1,function(x) postprobBic(x,formula=myFormula))
 ##         }
       } else {
-        if ('multicore' %in% loadedNamespaces()) {
-          signif$categ[,i] <- unlist(multicore::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
-        } else stop('multicore library has not been loaded!')
+        if ('parallel' %in% loadedNamespaces()) {
+          signif$categ[,i] <- unlist(parallel::mclapply(exprs.list,function(y) apply(y[,colsel],1,function(z) postprobBic(z,formula=myFormula)),mc.cores=mc.cores))
+        } else stop('parallel library has not been loaded!')
       }
     }
     tmpCoef <- coef(lm1)[,1:(length(levels(tmpVar)))]
@@ -308,9 +308,9 @@ if (!is.null(vars2test$survival)) {
     if (mc.cores==1) {
       result.list <- lapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach))))
     } else {
-      if ('multicore' %in% loadedNamespaces()) {
-        result.list <- multicore::mclapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach))),mc.cores=mc.cores)
-      } else stop('multicore library has not been loaded!')
+      if ('parallel' %in% loadedNamespaces()) {
+        result.list <- parallel::mclapply(exprs.list,function(y) do.call('rbind',apply(y,1,function(z) mycoxph(x=z,eset=x,coxSurvEvent,coxSurvTime,adjustVarsTxt,approach))),mc.cores=mc.cores)
+      } else stop('parallel library has not been loaded!')
     }
     result.matrix <- do.call('rbind',result.list)
     summaryDif$surv[,i] <- as.numeric(result.matrix[,1])

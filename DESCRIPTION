@@ -1,7 +1,7 @@
 Package: phenoTest
 Type: Package
 Title: Tools to test association between gene expression and phenotype in a way that is efficient, structured, fast and scalable. We also provide tools to do GSEA (Gene set enrichment analysis) and copy number variation.
-Version: 1.9.2
+Version: 1.9.3
 Date: 2013-05-29
 Author: Evarist Planet
 Maintainer: Evarist Planet <evarist.planet@irbbarcelona.org>
@@ -10,6 +10,6 @@ License: GPL (>=2)
 Depends: R (>= 2.12.0), Biobase, methods, annotate, Heatplus, BMA
 Imports: survival, limma, Hmisc, gplots, Category, AnnotationDbi, hopach, biomaRt, GSEABase, genefilter, xtable, annotate, mgcv, SNPchip, hgu133a.db, HTSanalyzeR
 Suggests: GSEABase, KEGG.db, GO.db
-Enhances: multicore, org.Ce.eg.db, org.Mm.eg.db, org.Rn.eg.db, org.Hs.eg.db, org.Dm.eg.db
+Enhances: parallel, org.Ce.eg.db, org.Mm.eg.db, org.Rn.eg.db, org.Hs.eg.db, org.Dm.eg.db
 LazyLoad: yes
 biocViews: Microarray, Bioinformatics, DifferentialExpression, MultipleComparisons, Clustering, Classification
