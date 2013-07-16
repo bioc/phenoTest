@@ -29,7 +29,7 @@ gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotE
   if (id.entrezid) {
     entrezid <- featureNames(epheno)
     orglib <- paste(annotation(epheno),'.db',sep='')
-    if (!(orglib %in% loadedNamespaces())) stop('multicore library has not been loaded!')
+    if (!(orglib %in% loadedNamespaces())) stop('parallel library has not been loaded!')
     envir <- eval(parse(text=paste(annotation(epheno),'SYMBOL',sep='')))
     symbol <- unlist(AnnotationDbi::mget(featureNames(epheno),envir,ifnotfound=NA))
     envir <- eval(parse(text=paste(annotation(epheno),'GENENAME',sep='')))

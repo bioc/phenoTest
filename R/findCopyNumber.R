@@ -128,9 +128,9 @@ getIndivPvals <- function(obs.pred,sim.pred,p.adjust.method='BY',mc.cores=mc.cor
       if (mc.cores==1) {
         pvals <- sapply(obs.pred,function(x) getPval(x,sim.pred,useAllPerm,useIntegrate)) * 2
       } else {
-        if ('multicore' %in% loadedNamespaces()) {
-          pvals <- unlist(multicore::mclapply(as.list(obs.pred),function(x) getPval(x,sim.pred,useAllPerm,useIntegrate),mc.preschedule=T,mc.cores=mc.cores)) * 2
-        } else stop('multicore library has not been loaded!')
+        if ('parallel' %in% loadedNamespaces()) {
+          pvals <- unlist(parallel::mclapply(as.list(obs.pred),function(x) getPval(x,sim.pred,useAllPerm,useIntegrate),mc.preschedule=T,mc.cores=mc.cores)) * 2
+        } else stop('parallel library has not been loaded!')
       }
     } else {
       mypos <- cbind(1:length(d),order(d))
@@ -146,9 +146,9 @@ getIndivPvals <- function(obs.pred,sim.pred,p.adjust.method='BY',mc.cores=mc.cor
       if (mc.cores==1) {      
         pvals <- sapply(1:length(obs.pred),function(i) getPval(obs.pred[i],sim.pred[sel[[i]]],useAllPerm,useIntegrate)) * 2
       } else {
-      if ('multicore' %in% loadedNamespaces()) {
-        pvals <- unlist(multicore::mclapply(as.list(1:length(obs.pred)),function(i) getPval(obs.pred[i],sim.pred[sel[[i]]],useAllPerm,useIntegrate),mc.preschedule=T,mc.cores=mc.cores)) * 2
-      } else stop('multicore library has not been loaded!')
+      if ('parallel' %in% loadedNamespaces()) {
+        pvals <- unlist(parallel::mclapply(as.list(1:length(obs.pred)),function(i) getPval(obs.pred[i],sim.pred[sel[[i]]],useAllPerm,useIntegrate),mc.preschedule=T,mc.cores=mc.cores)) * 2
+      } else stop('parallel library has not been loaded!')
     }
     }
   }
@@ -228,9 +228,9 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
   if (mc.cores==1) {
     tmp <- lapply(ids,function(i) getPred(es=x[x$chr==i,'es'],pos=x[x$chr==i,'pos']))
   } else {
-    if ('multicore' %in% loadedNamespaces()) {
-      tmp <- multicore::mclapply(ids,function(i) getPred(es=x[x$chr==i,'es'],pos=x[x$chr==i,'pos']),mc.preschedule=F,mc.cores=mc.cores)
-    } else stop('multicore library has not been loaded!')      
+    if ('parallel' %in% loadedNamespaces()) {
+      tmp <- parallel::mclapply(ids,function(i) getPred(es=x[x$chr==i,'es'],pos=x[x$chr==i,'pos']),mc.preschedule=F,mc.cores=mc.cores)
+    } else stop('parallel library has not been loaded!')      
   }
   obs.pred <- lapply(tmp,function(x) x[['m.pred']])
   mysp <- lapply(tmp,function(x) x[['sp']])
@@ -242,9 +242,9 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
     if (mc.cores==1) {
       sim.pred <- unlist(lapply(as.list(1:(B)),function(j) getPred(es=sim[,j],pos=x[x$chr==selChr,'pos'],sp=mysp[[selChr]])$m.pred))
     } else {
-      if ('multicore' %in% loadedNamespaces()) {
-        sim.pred <- unlist(multicore::mclapply(as.list(1:(B)),function(j) getPred(es=sim[,j],pos=x[x$chr==selChr,'pos'],sp=mysp[[selChr]])$m.pred,mc.preschedule=T,mc.cores=mc.cores))
-      } else stop('multicore library has not been loaded!')      
+      if ('parallel' %in% loadedNamespaces()) {
+        sim.pred <- unlist(parallel::mclapply(as.list(1:(B)),function(j) getPred(es=sim[,j],pos=x[x$chr==selChr,'pos'],sp=mysp[[selChr]])$m.pred,mc.preschedule=T,mc.cores=mc.cores))
+      } else stop('parallel library has not been loaded!')      
     }
   } else {
     if (sampleGenome) {
@@ -255,9 +255,9 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
     if (mc.cores==1) {
       sim.pred <- unlist(lapply(as.list(1:(B)),function(j) lapply(ids,function(i) getPred(es=sim[x$chr==i,j],pos=x[x$chr==i,'pos'],sp=mysp[[i]])$m.pred)))
     } else {
-      if ('multicore' %in% loadedNamespaces()) {
-        sim.pred <- unlist(lapply(as.list(1:(B)),function(j) multicore::mclapply(ids,function(i) getPred(es=sim[x$chr==i,j],pos=x[x$chr==i,'pos'],sp=mysp[[i]])$m.pred,mc.preschedule=F,mc.cores=mc.cores)))
-      } else stop('multicore library has not been loaded!')      
+      if ('parallel' %in% loadedNamespaces()) {
+        sim.pred <- unlist(lapply(as.list(1:(B)),function(j) parallel::mclapply(ids,function(i) getPred(es=sim[x$chr==i,j],pos=x[x$chr==i,'pos'],sp=mysp[[i]])$m.pred,mc.preschedule=F,mc.cores=mc.cores)))
+      } else stop('parallel library has not been loaded!')      
     }
   }
   #qc plot
@@ -273,9 +273,9 @@ findCopyNumber <- function(x,minGenes=15,B=100,p.adjust.method='BH',pvalcutoff=0
       if (mc.cores==1) {
         d <- unlist(lapply(ids,function(i) getDistToClosest(x[x$chr==i,'pos'],minGenes)))
       } else {
-        if ('multicore' %in% loadedNamespaces()) {
-          d <- unlist(multicore::mclapply(ids,function(i) getDistToClosest(x[x$chr==i,'pos'],minGenes),mc.preschedule=F,mc.cores=mc.cores))
-        } else stop('multicore library has not been loaded!')
+        if ('parallel' %in% loadedNamespaces()) {
+          d <- unlist(parallel::mclapply(ids,function(i) getDistToClosest(x[x$chr==i,'pos'],minGenes),mc.preschedule=F,mc.cores=mc.cores))
+        } else stop('parallel library has not been loaded!')
       }
     }
     if (sampleGenome) {
