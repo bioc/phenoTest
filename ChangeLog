@@ -1,4 +1,6 @@
-VERSION 1.9.1
+VERSION 1.9.4
+- Solve errors in ExpressionSet subsetting. The class seems to have changed. It does not allow subsettings that were allowed in the past.
+VERSION 1.9.3
 - Change multicore to parallel.
 VERSION 1.9.2
 - Upgrade version.

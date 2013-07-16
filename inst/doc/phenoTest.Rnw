@@ -142,7 +142,6 @@ The object can be subseted by phenotype names:
 phenoNames(epheno)
 epheno[,'Tumor.size']
 epheno[,2]
-epheno[,c(FALSE,FALSE,TRUE)]
 @ 
 \end{scriptsize}
   
@@ -252,7 +251,7 @@ Figure \ref{fig:barplotSignifSignatures}.
 \begin{scriptsize}
 \setkeys{Gin}{width=0.6\textwidth}
 <<label=barplotSignifSignatures,include=FALSE>>=
-barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.99)
+barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.99, ylim=c(0, 1))
 @                                                                                                                                               
 \begin{figure}
 \begin{center}
@@ -297,7 +296,7 @@ hazard ratio of each phenotype for each gene set. Figure
 \begin{scriptsize}
 \setkeys{Gin}{width=0.6\textwidth} 
 <<label=barplotSignatures,include=FALSE>>=
-barplotSignatures(epheno[,'Tumor.size'],mySignature)
+barplotSignatures(epheno[,'Tumor.size'],mySignature, ylim=c(0,1))
 @ 
 \begin{figure}
 \begin{center}
