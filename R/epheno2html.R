@@ -162,7 +162,7 @@ epheno2html <- function(x,epheno,outputdir,prefix='',genelimit=50,categories=3,w
         tiny.pic[[ifelse(id.entrezid,6,7)]] <- links[[ifelse(id.entrezid,6,7)]] <- paste('phenoPlots/',varName,'/smooth_',gsub('/','_',featureNames(x)),'.png',sep='')
       }
     }
-    file <- paste(outputdir,'/',prefix,'_',varType,'_',varName,'.html',sep='')
+    file <- paste(outputdir,'/',ifelse(prefix=='','',paste(prefix,'_',sep='')),varType,'_',varName,'.html',sep='')
     title <- paste(varName,' (',varType,' variable)',sep='')
     write.html(xout,file=file,links=links,tiny.pic=tiny.pic,title=title)
   }
