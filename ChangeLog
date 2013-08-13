@@ -1,3 +1,5 @@
+VERSION 1.9.5
+- pAdjust method for epheno objects gave an error when only one variable was tested. It was a subsetting error.
 VERSION 1.9.4
 - Solve errors in ExpressionSet subsetting. The class seems to have changed. It does not allow subsettings that were allowed in the past.
 VERSION 1.9.3

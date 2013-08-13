@@ -538,7 +538,7 @@ setGeneric("pAdjust",function(x, method='BH') standardGeneric("pAdjust"))
 setMethod("pAdjust",signature(x="epheno"), function(x, method='BH') {
 sel <- which(pData(x)$phenoType=="signif")
 if (nrow(x)>1) {
-  exprs(x)[,sel] <- apply(exprs(x)[,sel],2,function(xc) p.adjust(xc,method=method))
+  exprs(x)[,sel, drop=F] <- apply(exprs(x)[,sel,drop=F],2,function(xc) p.adjust(xc,method=method))
 }
 x@p.adjust.method <- method
 return(x)
