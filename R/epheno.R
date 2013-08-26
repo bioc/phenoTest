@@ -169,8 +169,8 @@ if (!is.null(vars2test$ordinal)) {
     meanLabel <- c(meanLabel,myLevels,rep(NA,length(myLevels)-1))
     phenoClass.signif <- c(phenoClass.signif,'ordinal')
 
-    tmpVar <- as.factor(pData(x)[colsel,vars2test$ordinal[i]])
     colsel <- !is.na(pData(x)[,vars2test$ordinal[i]])
+    tmpVar <- as.factor(pData(x)[colsel,vars2test$ordinal[i]])
     
     if (missing(adjustVars)) {
       myFormula <- "~ -1 + tmpVar"
