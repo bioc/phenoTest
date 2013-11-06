@@ -1,3 +1,5 @@
+VERSION 1.11.2
+- Pca x and y axis percentage of explained variability was not correctly computed.
 VERSION 1.9.8
 - Add pca function.
 VERSION 1.9.7

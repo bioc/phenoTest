@@ -116,7 +116,8 @@ pca <- function(x, group, group2, pair, names, ellipse=FALSE, main='', component
   #calculate principal components
   pcdat <- prcomp(t(exprs(x)))
   pc <- data.frame(pcdat$x[, components])
-  pc.lab <- round(pcdat$sdev/sum(pcdat$sdev)*100,1)[components]
+  #pc.lab <- round(pcdat$sdev/sum(pcdat$sdev)*100,1)[components]
+  pc.lab <- round(pcdat$sdev^2/sum(pcdat$sdev^2)*100,1)[components]
   pc.lab <- paste('PC', components, ' (', pc.lab, '%)', sep='')
   #choose 2d or 3d
   if (length(components)==2) {
