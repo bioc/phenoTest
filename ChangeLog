@@ -1,3 +1,5 @@
+VERSION 1.11.3
+- ExpressionPhenoTest contained a bug when analyzing continous variables with the bayesian approach.
 VERSION 1.11.2
 - Pca x and y axis percentage of explained variability was not correctly computed.
 VERSION 1.9.8

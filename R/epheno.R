@@ -130,8 +130,7 @@ if (!is.null(vars2test$continuous)) {
       eb <- eBayes(contrasts.fit(lm1,contrasts=c(0,1,rep(0,ncol(design)-2))))
       signif$cont[,i] <- eb$F.p.value
     } else if (approach=='bayesian') {
-      myFormula <- gsub('-1','+1',paste('exprs',myFormula))
-#      myFormula <- gsub('~','~ +',paste('exprs',myFormula))
+      myFormula <- gsub('~','~ 1 +',paste('exprs',myFormula))
       if (mc.cores==1) {
         signif$cont[,i] <- apply(exprs(x[,colsel]),1,function(x) postprobBic(x,formula=myFormula))
       } else {
