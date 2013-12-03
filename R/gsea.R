@@ -19,7 +19,6 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,cente
   if (averageRepeats) {
     x <- tapply(x,names(x),mean)
   }
-browser()
   x <- x[complete.cases(x) & sign(x)!=0]
   x <- x[!is.na(as.character(names(x)))]
   x <- x[order(x,decreasing=TRUE)]  

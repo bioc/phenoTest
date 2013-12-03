@@ -1,3 +1,5 @@
+VERSION 1.11.5
+- An interruption point was forgotten in the code. 
 VERSION 1.11.4
 - Change color of paired data in pca to grey.
 VERSION 1.11.3
