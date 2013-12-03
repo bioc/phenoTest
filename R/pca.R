@@ -39,7 +39,7 @@ pca.2d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, mai
   }
   if (!missing(pair)) {
     line <- x[[pair]]
-    add <- c(add, 'geom_line(aes(group=line))')
+    add <- c(add, "geom_line(aes(group=line), colour='grey')")
   } else {
     line <- ''
   }
