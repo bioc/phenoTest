@@ -1,3 +1,5 @@
+VERSION 1.13.1
+- Change maintainer's email address.
 VERSION 1.11.5
 - An interruption point was forgotten in the code. 
 VERSION 1.11.4
