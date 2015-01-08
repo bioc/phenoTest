@@ -71,46 +71,46 @@ pca.2d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, mai
   tmp
 }
 
-pca.multipleDim <- function(x, pc, pc.lab, group, group2, pair, names, ellipse, main, components) {
-  idx <- combn(1:length(components), 2)
-  grid.newpage()
-  pushViewport(viewport(layout = grid.layout(length(components), length(components)-1,
-                          heights = unit(c(0.5, rep(10/(length(components)-1), length(components)-1)), "null"))))
-  for (i in 1:ncol(idx)) {
-    pc.sel <- pc[, idx[, i]]
-    tmp <- pca.2d(x, pc.sel, pc.lab[idx[, i]], group, group2, pair, names, ellipse, main='', components[idx[, i]],
-                  legend=F)
-    print(tmp, vp=viewport(layout.pos.row = idx[1, i]+1, layout.pos.col=idx[2, i]-1))
-  }
-  #add title (we plot a blank plot)
-  vplayout <- function(x, y) viewport(layout.pos.row=x, layout.pos.col=y)
-  dummy <- ggplot(data.frame(main=main), aes(x=1,y=1,label=main)) + geom_text(size=5) +
-    theme(panel.background=element_blank(), panel.grid.minor=element_blank(), panel.grid.major=element_blank(),
-          axis.text.x=element_blank(), axis.text.y=element_blank(), axis.ticks=element_blank(),
-          axis.title.x=element_blank(), axis.title.y=element_blank())
-  print(dummy,vp=vplayout(1,1:(length(components)-1)))
-  #add legend
-  add <- c()
-  if (!missing(group2)) {
-    shape <- x[[group2]]
-  } else {
-    shape <- ''
-    add <- c(add, 'guides(shape=FALSE)')
-  }
-  dat <- data.frame(colour=x[[group]], shape=shape, dummy1=rep(.5, ncol(x)), dummy2=rep(.5, ncol(x)))
-  tmp <- ggplot(aes(x=dummy1, y=dummy2, colour=colour, shape=shape), data=dat) + geom_point()
-  tmp <- tmp + theme(panel.background=element_blank(), panel.grid.minor=element_blank(),
-                     panel.grid.major=element_blank(), axis.text.x=element_blank(), axis.text.y=element_blank(),
-                     axis.ticks=element_blank(), axis.title.x=element_blank(), axis.title.y=element_blank(),
-                     legend.position=c(.5, .5))
-  if (length(add)>0) for (i in 1:length(add)) tmp <- tmp + eval(parse(text=add[i]))
-  print(tmp, vp=viewport(layout.pos.row = length(components), layout.pos.col=1))
-}
+## pca.multipleDim <- function(x, pc, pc.lab, group, group2, pair, names, ellipse, main, components) {
+##   idx <- combn(1:length(components), 2)
+##   grid.newpage()
+##   pushViewport(viewport(layout = grid.layout(length(components), length(components)-1,
+##                           heights = unit(c(0.5, rep(10/(length(components)-1), length(components)-1)), "null"))))
+##   for (i in 1:ncol(idx)) {
+##     pc.sel <- pc[, idx[, i]]
+##     tmp <- pca.2d(x, pc.sel, pc.lab[idx[, i]], group, group2, pair, names, ellipse, main='', components[idx[, i]],
+##                   legend=F)
+##     print(tmp, vp=viewport(layout.pos.row = idx[1, i]+1, layout.pos.col=idx[2, i]-1))
+##   }
+##   #add title (we plot a blank plot)
+##   vplayout <- function(x, y) viewport(layout.pos.row=x, layout.pos.col=y)
+##   dummy <- ggplot(data.frame(main=main), aes(x=1,y=1,label=main)) + geom_text(size=5) +
+##     theme(panel.background=element_blank(), panel.grid.minor=element_blank(), panel.grid.major=element_blank(),
+##           axis.text.x=element_blank(), axis.text.y=element_blank(), axis.ticks=element_blank(),
+##           axis.title.x=element_blank(), axis.title.y=element_blank())
+##   print(dummy,vp=vplayout(1,1:(length(components)-1)))
+##   #add legend
+##   add <- c()
+##   if (!missing(group2)) {
+##     shape <- x[[group2]]
+##   } else {
+##     shape <- ''
+##     add <- c(add, 'guides(shape=FALSE)')
+##   }
+##   dat <- data.frame(colour=x[[group]], shape=shape, dummy1=rep(.5, ncol(x)), dummy2=rep(.5, ncol(x)))
+##   tmp <- ggplot(aes(x=dummy1, y=dummy2, colour=colour, shape=shape), data=dat) + geom_point()
+##   tmp <- tmp + theme(panel.background=element_blank(), panel.grid.minor=element_blank(),
+##                      panel.grid.major=element_blank(), axis.text.x=element_blank(), axis.text.y=element_blank(),
+##                      axis.ticks=element_blank(), axis.title.x=element_blank(), axis.title.y=element_blank(),
+##                      legend.position=c(.5, .5))
+##   if (length(add)>0) for (i in 1:length(add)) tmp <- tmp + eval(parse(text=add[i]))
+##   print(tmp, vp=viewport(layout.pos.row = length(components), layout.pos.col=1))
+## }
 
 pca <- function(x, group, group2, pair, names, ellipse=FALSE, main='', components= c(1, 2)) {
   #libs
   require(ggplot2)
-  require(gridExtra)
+#  require(gridExtra)
   #error control
   stopifnot(length(components)<=4)
   #calculate principal components
@@ -123,6 +123,7 @@ pca <- function(x, group, group2, pair, names, ellipse=FALSE, main='', component
   if (length(components)==2) {
     pca.2d(x, pc, pc.lab, group, group2, pair, names, ellipse, main, components)
   } else {
-    pca.multipleDim(x, pc, pc.lab, group, group2, pair, names, ellipse, main, components)
+#    pca.multipleDim(x, pc, pc.lab, group, group2, pair, names, ellipse, main, components)
+    stop('multiple dimension pca will not work until problems in gridExtra package get solved')
   }
 }

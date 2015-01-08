@@ -56,7 +56,7 @@ pca(x, group, group2, pair, names, ellipse = FALSE, main = "", components = c(1,
 \examples{
 data(eset)
 pca(x=eset, group='Relapse', names='GEOaccession')
-pca(x=eset, group='Relapse', names='GEOaccession', components=1:3)
+#pca(x=eset, group='Relapse', names='GEOaccession', components=1:3)
 }
 \keyword{datasets}
     
