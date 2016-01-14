@@ -64,7 +64,7 @@ pca.2d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, mai
   }
 #
   #plot
-  tmp <- qplot(x=pc1, y=pc2, data=dat, xlab=pc.lab[1], ylab=pc.lab[2], colour=colour, shape=shape, title=main) +
+  tmp <- qplot(x=pc1, y=pc2, data=dat, xlab=pc.lab[1], ylab=pc.lab[2], colour=colour, shape=shape, main=main) +
     geom_point() + coord_cartesian(xlim=lim, ylim=lim) + theme(legend.position=legend.position) +
       ggtitle(main)
   if (length(add)>0) for (i in 1:length(add)) tmp <- tmp + eval(parse(text=add[i]))
