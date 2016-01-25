@@ -1,4 +1,4 @@
-pca.3d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, main='', components= c(1, 2), legend=TRUE) { 
+pca.3d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, main='', components= c(1, 2), legend=TRUE) {
   #control errors
   stopifnot(class(x)=='ExpressionSet')
   if (!missing(group)) {
