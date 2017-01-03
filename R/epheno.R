@@ -128,7 +128,7 @@ if (!is.null(vars2test$continuous)) {
 
     if (approach=='frequentist') {
       eb <- eBayes(contrasts.fit(lm1,contrasts=c(0,1,rep(0,ncol(design)-2))))
-      signif$cont[,i] <- eb$F.p.value
+      signif$cont[,i] <- as.numeric(eb$p.value)
     } else if (approach=='bayesian') {
       myFormula <- gsub('~','~ 1 +',paste('exprs',myFormula))
       if (mc.cores==1) {
@@ -319,11 +319,12 @@ if (!is.null(vars2test$survival)) {
 
 allsummaryDif <- cbind(summaryDif$cont,summaryDif$ordi,summaryDif$categ,summaryDif$surv)
 allsignifs <- cbind(signif$cont, signif$ordi, signif$categ, signif$surv)
+allnames <- c(colnames(signif$cont), colnames(signif$ordi), vars2test$categorical, colnames(signif$surv))
 rownames(allsummaryDif) <- rownames(allsignifs) <- featureNames(x)
 if (p.adjust.method!='none' & approach=='frequentist') allsignifs <- apply(allsignifs,2,function(x) p.adjust(x,p.adjust.method))
 cat('\n')
 
-phenoName <- c(phenoName,colnames(allsignifs))
+phenoName <- c(phenoName,allnames)
 phenoClass <- c(phenoClass,phenoClass.signif)
 if (class(allsignifs)=='numeric') allsignifs <- t(as.matrix(allsignifs))
 phenoType <- c(phenoType,rep('signif',ncol(allsignifs)))
@@ -431,16 +432,20 @@ setMethod("[",signature(x="epheno"),
     }
     if (!missing(j)) {
       if (class(j)=="character") {
-        sel <- pData(x)$phenoName %in% j
+        sel <- as.character(pData(x)$phenoName) %in% j
       } else if (class(j)=="numeric" | class(j)=="integer") {
         if (any(c(j<1, j>length(phenoNames(x))))) stop('Error: subscript out of bounds')
-        sel <- pData(x)$phenoName %in% phenoNames(x)[j]
+        sel <- as.character(pData(x)$phenoName) == levels(pData(x)$phenoName)[j]
       } else if (class(j)=="logical") {
         if (length(j)!=length(phenoNames(x))) stop('Error: subscript out of bounds')
         sel <- pData(x)$phenoName %in% phenoNames(x)[j]
       }
-      pData(x) <- pData(x)[sel,,drop=FALSE]
-      exprs(x) <- exprs(x)[,sel,drop=FALSE]
+      pData.n <- new('AnnotatedDataFrame', pData(x)[sel,,drop=FALSE])
+      exprs.n <- exprs(x)[,sel,drop=FALSE]
+      ans <- new('epheno',exprs=exprs.n,phenoData=pData.n,annotation=annotation(x))
+      ans@p.adjust.method <- x@p.adjust.method
+      ans@approach <- x@approach
+      x <- ans
     }
     return(x)
   }
@@ -536,11 +541,17 @@ write.csv(ans, file=file, row.names=row.names, ...)
 setGeneric("pAdjust",function(x, method='BH') standardGeneric("pAdjust"))
 setMethod("pAdjust",signature(x="epheno"), function(x, method='BH') {
 sel <- which(pData(x)$phenoType=="signif")
-if (nrow(x)>1) {
-  exprs(x)[,sel] <- apply(exprs(x)[,sel],2,function(xc) p.adjust(xc,method=method))
+if (nrow(x) > 1) {
+  pData.n <- new('AnnotatedDataFrame', pData(x))
+  exprs.n <- exprs(x)
+  exprs.n[, sel] <- apply(exprs.n[, sel], 2, function(xc) p.adjust(xc, method=method))
+  ans <- new('epheno',exprs=exprs.n,phenoData=pData.n,annotation=annotation(x))
+  ans@p.adjust.method <- method
+  ans@approach <- x@approach
+} else {
+  ans <- x
 }
-x@p.adjust.method <- method
-return(x)
+return(ans)
 }
 )
 
