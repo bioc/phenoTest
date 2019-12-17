@@ -775,43 +775,6 @@ gsea <- function(x,gsets,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000
   return(ans)
 }
 
-gsea.go <- function(x,species='Hs',ontologies='MF',logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test="perm",
-                    p.adjust.method="none",pval.comp.method="original",pval.smooth.tail=TRUE,minGenes=10,maxGenes=500,center=FALSE) {
-  if (class(x)=='numeric') {
-    x.names <- names(x)
-  } else if (class(x)=='matrix') {
-    x.names <- rownames(x)
-  } else if (class(x)=='epheno') {
-    x.names <- featureNames(x)
-  }
-  geo <- getGo(species,ontologies)
-  geo <- lapply(geo,function(x) x[x %in% x.names])
-  geo <- geo[unlist(lapply(geo,length))>0]
-  if (!any(x.names %in% unique(unlist(geo)))) stop('None of the identifiers in x exist in kegg:\nMake sure your identifiers are entrezids and that your data is at gene level!')
-  ans <- gsea(x=x,gsets=geo,logScale=logScale,absVals=absVals,averageRepeats=averageRepeats,B=B,mc.cores=mc.cores,test=test,p.adjust.method=p.adjust.method,pval.comp.method=pval.comp.method,pval.smooth.tail=pval.smooth.tail,minGenes=minGenes,maxGenes=maxGenes,center=center)
-  ans[['gsetOrigin']] <- 'GO'
-  return(ans)
-}
-
-gsea.kegg <- function(x,species='Hs',logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,B=1000,mc.cores=1,test="perm",
-                    p.adjust.method="none",pval.comp.method="original",pval.smooth.tail=TRUE,minGenes=10,maxGenes=500,center=FALSE) {
-  stopifnot(class(x) %in% c('numeric','matrix','epheno'))
-  if (class(x)=='numeric') {
-    x.names <- names(x)
-  } else if (class(x)=='matrix') {
-    x.names <- rownames(x)
-  } else if (class(x)=='epheno') {
-    x.names <- featureNames(x)
-  }
-  kegg <- getKegg(species)
-  kegg <- lapply(kegg,function(x) x[x %in% x.names])
-  kegg <- kegg[unlist(lapply(kegg,length))>0]
-  if (!any(x.names %in% unique(unlist(kegg)))) stop('None of the identifiers in x exist in kegg:\nMake sure your identifiers are entrezids and that your data is at gene level!')
-  ans <- gsea(x=x,gsets=kegg,logScale=logScale,absVals=absVals,averageRepeats=averageRepeats,B=B,mc.cores=mc.cores,test=test,p.adjust.method=p.adjust.method,pval.comp.method=pval.comp.method,pval.smooth.tail=pval.smooth.tail,minGenes=minGenes,maxGenes=maxGenes,center=center)
-  ans[['gsetOrigin']] <- 'KEGG'
-  return(ans)
-}
-
 setMethod("show",signature(object="gseaData"),
   function (object) {
     cat("Object of class 'gseaData'\n")

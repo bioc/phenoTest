@@ -3,8 +3,8 @@ importClassesFrom(Biobase, ExpressionSet, eSet, VersionedBiobase, Versioned)
 export(summary.gseaSignificanceSign, summary.gseaSignificanceVar, plot.gseaSignaturesSign,
        plot.gseaSignaturesVar, ExpressionPhenoTest, epheno2html,heatmapPhenoTest,
        ClusterPhenoTest, smoothCoxph, getEsPositions, findCopyNumber, genesInArea,
-       gsea, getGo, getKegg, gsea.go, gsea.kegg, summary.gseaData, plot.gseaData,
-       gsea2html, gsea.selVars, gsea.selGsets, eset2genelevel, write.html, pca)
+       gsea, summary.gseaData, plot.gseaData, gsea2html, gsea.selVars, gsea.selGsets, 
+       eset2genelevel, write.html, pca)
 
 exportClasses("epheno","gseaSignatures","gseaSignaturesSign","gseaSignaturesVar",
               "gseaSignificanceSign","gseaSignificanceVar")
@@ -40,10 +40,6 @@ importFrom(xtable, xtable)
 
 importFrom(mgcv, gam, s, predict.gam)
 
-importFrom(SNPchip, plotCytoband)
-
 importFrom(hgu133a.db, hgu133aCHR, hgu133aCHRLOC, hgu133aCHRLOCEND)
-
-importFrom(HTSanalyzeR, GOGeneSets, KeggGeneSets)
 
 importFrom(ellipse, ellipse)

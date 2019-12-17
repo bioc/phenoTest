@@ -251,7 +251,7 @@ Figure \ref{fig:barplotSignifSignatures}.
 \begin{scriptsize}
 \setkeys{Gin}{width=0.6\textwidth}
 <<label=barplotSignifSignatures,include=FALSE>>=
-barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.99, ylim=c(0, 1))
+barplotSignifSignatures(epheno[,'lymph.node.status'],mySignature,alpha=0.99)
 @                                                                                                                                               
 \begin{figure}
 \begin{center}
@@ -393,7 +393,7 @@ The following chunk of code is an illustrative example of it:
 <<gsea>>=
 my.gsea <- gsea(x=epheno,gsets=mySignature,B=1000,p.adjust='BH')
 my.gsea
-summary(my.gsea)
+summary.gseaData(my.gsea)
 @ 
 \end{scriptsize}
 
@@ -403,7 +403,7 @@ We can produce plots as follows:
 
 \begin{scriptsize}
 <<gseaPlot>>=
-plot(my.gsea)
+plot.gseaData(my.gsea)
 @ 
 \end{scriptsize}
 
@@ -415,10 +415,10 @@ can be seen in Figure \ref{fig:plotGsea}.
 \begin{scriptsize}
 <<label=plotGseaPrepare,include=FALSE>>=
 my.gsea <- gsea(x=epheno[,'Relapse'],gsets=mySignature[1],B=100,p.adjust='BH')
-summary(my.gsea)
+summary.gseaData(my.gsea)
 @ 
 <<label=plotGseaEs,include=FALSE>>=
-plot(my.gsea,es.nes='es',selGsets='My first signature')  
+plot.gseaData(my.gsea,es.nes='es',selGsets='My first signature')  
 @ 
 \begin{figure}
 \begin{center}
@@ -448,10 +448,10 @@ plot using Wilcoxon test can be seen in Figure
 \begin{scriptsize}
 <<plotGseaWilcoxPrepare>>=
 my.gsea <- gsea(x=epheno[,'Relapse'],gsets=mySignature,B=100,test='wilcox',p.adjust='BH')
-summary(my.gsea)
+summary.gseaData(my.gsea)
 @
 <<label=plotGseaWilcox,include=FALSE>>=
-plot(my.gsea,selGsets='My first signature')
+plot.gseaData(my.gsea,selGsets='My first signature')
 @ 
 \begin{figure}
 \begin{center}
