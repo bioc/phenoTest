@@ -185,12 +185,12 @@ plotCopyNumber <- function(es,chr,pos,obs.pred,ssr,es.mean,genome,chrLengths) {
   if (!missing(ssr)) {
     if (nrow(ssr)>0) apply(ssr,1,function(y) rect(y[1],min(es)*2,y[2],max(es)*2,col=paste(rgb(165/255,42/255,42/255),'15',sep='')))
   }
-  if (plotCyto) {
-    par(mar=c(4,3,1.5,1))
-    SNPchip::plotCytoband(chr,cex=0.6,build=genome,xlim=xlim,taper=T)
-    abline(v=c(seq(0,xlim[2],xlim[2]/10)),col='green',lty=1)
-    par(def.par)
-  }
+  ## if (plotCyto) {
+  ##   par(mar=c(4,3,1.5,1))
+  ##   SNPchip::plotCytoband(chr,cex=0.6,build=genome,xlim=xlim,taper=T)
+  ##   abline(v=c(seq(0,xlim[2],xlim[2]/10)),col='green',lty=1)
+  ##   par(def.par)
+  ## }
 }
 
 qcPlot <- function(ids,x,B,sim.pred,minGenes=10) {
