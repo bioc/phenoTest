@@ -1,9 +1,9 @@
 write.html <- function(x, links, tiny.pic, tiny.pic.size=100, title='', file, digits=3) {
-  stopifnot(class(x)=='data.frame')
+  stopifnot(is(x, 'data.frame'))
   if (missing(links)) links <- vector('list',ncol(x))
   if (missing(tiny.pic)) tiny.pic <- vector('list',ncol(x))  
-  stopifnot(class(links)=='list')
-  stopifnot(class(tiny.pic)=='list')  
+  stopifnot(is(links, 'list'))
+  stopifnot(is(tiny.pic, 'list'))
   stopifnot(length(links)==ncol(x))
   stopifnot(length(tiny.pic)==ncol(x))  
   stopifnot(!missing(file))

@@ -3,8 +3,8 @@
 #####################
 
 tellNumPerm <- function(B,gsets) {
-  if (class(gsets) %in% c('character','list','GeneSetCollection')) {
-    gsets.len <- ifelse(class(gsets)=='character',1,length(gsets))
+  if (is(gsets,  'character') | is(gsets, 'list') | is(gsets ,'GeneSetCollection')) {
+    gsets.len <- ifelse(is(gsets, 'character'),1,length(gsets))
     numPerm <- ceiling(B/gsets.len)
     if (numPerm<50) {
       warning('You are using less than 50 permutations per gene set. Results will be very inaccurate. You should increse the number of permutations!\n')
@@ -28,7 +28,7 @@ preProcessX <- function(x,logScale=TRUE,absVals=FALSE,averageRepeats=FALSE,cente
 }
 
 selSignatures <- function(x,signatures) {
-  if (class(signatures)=='list') {
+  if (is(signatures, 'list')) {
     sel <- unlist(lapply(signatures,function(y) any(y %in% names(x))))
   } else {
     sel <- any(signatures %in% names(x))
@@ -312,7 +312,7 @@ getSummary <- function(es,es.sim,fchr,p.adjust.method='none',pval.comp.method='o
     if (fewGsets) {
       nes.sim <- unlist(lapply(es.sim,getNesSim))
       ans <- mapply(function(x,y,z) gseaSignificance(x,y,pval.comp.method,pval.smooth.tail),x=es,y=es.sim)
-      if (class(ans)=='list') ans <- do.call(cbind,ans) #this line solves an error that appears on windows Windows Server 2003 R2 (32-bit) / x64 
+      if (is(ans, 'list')) ans <- do.call(cbind,ans) #this line solves an error that appears on windows Windows Server 2003 R2 (32-bit) / x64 
       ans.tmp <- matrix(as.numeric(ans),ncol=ncol(ans)); colnames(ans.tmp) <- colnames(ans); rownames(ans.tmp) <- rownames(ans); ans <- ans.tmp
       fdr <- getFdr(ans['nes',],ans['pval.nes',])
       ans <- t(rbind(ans,fdr=fdr))
@@ -414,10 +414,10 @@ plotGSEA <- function(es.nes,fc.hr,s,mainTitle='',variable='',pvalfdr,p.adjust.me
 
 plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gsets.len) {
   if (test=='wilcox') es.nes <- 'es'
-  if (class(z)=='list') {
+  if (is(z, 'list')) {
     gsl <- x[[1]]
     for (i in 1:length(z)) {
-      fewGsets <- class(x$es.sim.gam)!='matrix'
+      fewGsets <- !is(x$es.sim.gam, 'matrix')
       es <- gsl[[i]][['es']]
       if (fewGsets) es.sim <- gsl[[i]][['es.sim']] else es.sim <- x$es.sim.gam
       fc.hr <- x[[2]]
@@ -448,7 +448,7 @@ plotGseaPreprocess <- function(x,y,z,variable='',es.ylim,nes.ylim,test,es.nes,gs
         }
       }
     }
-  } else if (class(z)=='character') {
+  } else if (is(z, 'character')) {
     if (es.nes %in% c('es','both')) {
       #es plot
       es <- x[[1]][[1]][['es']]
@@ -677,7 +677,7 @@ setGeneric("gseaSignificance",function (x,p.adjust.method='none',pval.comp.metho
 setMethod("gseaSignificance",signature(x="gseaSignaturesSign"),
  function(x,p.adjust.method='none',pval.comp.method='original',pval.smooth.tail=TRUE) {
   y <- x[[1]]
-  fewGsets <- class(x$es.sim.gam)!='matrix'
+  fewGsets <- !is(x$es.sim.gam, 'matrix')
   es <- lapply(y,function(x) x[['es']])
   if (fewGsets) es.sim <- lapply(y,function(x) x[['es.sim']]) else es.sim <- x[['es.sim.gam']]
   signatures <- lapply(y,function(x) x[['signature']])
@@ -732,7 +732,7 @@ setMethod("show",signature(object="gseaSignificanceVar"),
 ####################
 
 plot.gseaSignaturesSign <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='both',...) {
-  if (class(gseaSignificance)!="gseaSignificanceSign") stop("if x is off class gseaSignaturesSign gseaSignificance has to be of class gseaSignificanceSign")
+  if (!is(gseaSignificance, "gseaSignificanceSign")) stop("if x is off class gseaSignaturesSign gseaSignificance has to be of class gseaSignificanceSign")
   if (es.nes!='nes' & missing(es.ylim)) {
     es.abs.max <- max(abs(summary(gseaSignificance)[,'es']),na.rm=TRUE)
     es.ylim <- c(-es.abs.max,es.abs.max)
@@ -748,7 +748,7 @@ plot.gseaSignaturesSign <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='
 }
 
 plot.gseaSignaturesVar <- function(x,gseaSignificance,es.ylim,nes.ylim,es.nes='both',...) {
-  if (class(gseaSignificance)!="gseaSignificanceVar") stop("if x is off class gseaSignaturesVar gseaSignificance has to be of class gseaSignificanceVar")
+  if (!is(gseaSignificance, "gseaSignificanceVar")) stop("if x is off class gseaSignaturesVar gseaSignificance has to be of class gseaSignificanceVar")
   if (es.nes!='nes' & missing(es.ylim)) {
     es.abs.max <- max(abs(summary(gseaSignificance)[,'es']),na.rm=TRUE)
     es.ylim <- c(-es.abs.max,es.abs.max)
@@ -814,12 +814,12 @@ setGeneric("usedGam",function (x) standardGeneric("usedGam"))
 
 setMethod("usedGam",signature(x="gseaData"),
  function(x) {
-   if (class(x[[1]])=='gseaSignaturesSign') {
+   if (is(x[[1]], 'gseaSignaturesSign')) {
      es.sim.gam <- x[[1]]$es.sim.gam
    } else {
      es.sim.gam <- x[[1]][[1]]$es.sim.gam
    }
-   ans <- class(es.sim.gam)=='matrix'
+   ans <- is(es.sim.gam, 'matrix')
    ans
  }
 )
@@ -831,14 +831,14 @@ summary.gseaData <- function (object,...) {
 gsea.selGsets <- function(x,selGsets) {
   sim <- x[['simulations']]
   pva <- x[['significance']]
-  if (class(sim)=='gseaSignaturesVar') {
+  if (is(sim, 'gseaSignaturesVar')) {
     sim <- lapply(sim,function(x) list(es.esSim=x$es.esSim[selGsets], fc.hr=x$fc.hr, signatures=x$signatures[selGsets], test=x$test))
     sim <- new("gseaSignaturesVar",sim)
   } else {
     sim <- list(es.esSim=sim$es.esSim[selGsets], fc.hr=sim$fc.hr, signatures=sim$signatures[selGsets], test=sim$test, es.sim.gam=sim$es.sim.gam)
     sim <- new("gseaSignaturesSign",sim)
   }
-  if (class(pva)=='gseaSignificanceVar') {
+  if (is(pva, 'gseaSignificanceVar')) {
     pva <- lapply(pva,function(x) list(summary=x$summary[selGsets,,drop=F], p.adjust.method=x$p.adjust.method))
     pva <- new("gseaSignificanceVar",pva)
   } else {
@@ -862,13 +862,13 @@ gsea.selVars <- function(x,selVars) {
 
 plot.gseaData <- function(x,selGsets,selVars,...) {
   if (!missing(selGsets)) {
-    if (class(x[[1]])=='gseaSignaturesVar') signatureNames <- names(x[[1]][[1]][['es.esSim']]) else signatureNames <- names(x[[1]][['es.esSim']])
+    if (is(x[[1]], 'gseaSignaturesVar')) signatureNames <- names(x[[1]][[1]][['es.esSim']]) else signatureNames <- names(x[[1]][['es.esSim']])
     stopifnot(!any(!selGsets %in% signatureNames))
     x <- gsea.selGsets(x,selGsets)
   }
-  if (!missing(selVars) & class(x[[1]])=='gseaSignaturesVar') {
+  if (!missing(selVars) & is(x[[1]], 'gseaSignaturesVar')) {
     stopifnot(!any(!selVars %in% names(x[[1]])))
     x <- gsea.selVars(x,selVars)
   }
-  if (class(x[[1]][[1]]$es.sim.gam)=='matrix') plot(x[[1]],x[[2]],es.nes='nes',...) else plot(x[[1]],x[[2]],...)
+  if (is(x[[1]][[1]]$es.sim.gam, 'matrix')) plot(x[[1]],x[[2]],es.nes='nes',...) else plot(x[[1]],x[[2]],...)
 }

@@ -1,7 +1,7 @@
 gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotEs=FALSE,limit=100) {
   #control errors
-  stopifnot(class(gseaData)=='gseaData')
-  stopifnot(class(epheno)=='epheno')
+  stopifnot(is(gseaData, 'gseaData'))
+  stopifnot(is(epheno, 'epheno'))
   stopifnot(!missing(variable))
   stopifnot(variable %in% phenoNames(epheno))
   stopifnot(!missing(file))

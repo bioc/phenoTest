@@ -43,7 +43,7 @@ postprobBic <- function(exprs,formula) {
   return(ans)
 }
 
-stopifnot(class(x)=='ExpressionSet')
+stopifnot(is(x, 'ExpressionSet'))
 stopifnot(is.numeric(exprs(x)))
 stopifnot(is.numeric(mc.cores))
 stopifnot(approach %in% c('frequentist','bayesian'))
@@ -71,7 +71,7 @@ if (!is.null(vars2test$survival)) {
 if (continuousCategories<2) stop('continuousCategories can not be less than 2')
 if (continuousCategories>4) stop('continuousCategories can not be bigger than 4')
 if (!missing(adjustVars)) {
-  if (class(adjustVars)!='character') stop('adjustVars has to be of class character')
+  if (!is(adjustVars,'character')) stop('adjustVars has to be of class character')
   if (!all(adjustVars %in% colnames(pData(x)))) stop('adjustVars is not in colnames(pData(x))')
 }
 
@@ -326,7 +326,7 @@ cat('\n')
 
 phenoName <- c(phenoName,allnames)
 phenoClass <- c(phenoClass,phenoClass.signif)
-if (class(allsignifs)=='numeric') allsignifs <- t(as.matrix(allsignifs))
+if (is(allsignifs, 'numeric')) allsignifs <- t(as.matrix(allsignifs))
 phenoType <- c(phenoType,rep('signif',ncol(allsignifs)))
 meanLabel <- c(meanLabel,rep(NA,ncol(allsignifs)))
 survTime <-  c(survTime,rep(NA,ncol(allsignifs)))
@@ -420,23 +420,23 @@ setMethod("show",signature(object="epheno"),
 setMethod("[",signature(x="epheno"),
   function (x, i, j) {
     if (!missing(i)) {
-      if (class(i)=="character") {
+      if (is(i, "character")) {
         stopifnot(any(i %in% featureNames(x)))
         exprs(x) <- exprs(x)[i,,drop=FALSE]
-      } else if (class(i)=="numeric" | class(i)=="integer") {
+      } else if (is(i, "numeric") | is(i, "integer")) {
         if (any(c(i<1, i>nrow(x)))) stop('Error: subscript out of bounds')
         exprs(x) <- exprs(x)[i,,drop=FALSE]
-      } else if (class(i)=="logical") {
+      } else if (is(i, "logical")) {
         exprs(x) <- exprs(x)[which(i),,drop=FALSE]
       }
     }
     if (!missing(j)) {
-      if (class(j)=="character") {
+      if (is(j, "character")) {
         sel <- as.character(pData(x)$phenoName) %in% j
-      } else if (class(j)=="numeric" | class(j)=="integer") {
+      } else if (is(j, "numeric") | is(j, "integer")) {
         if (any(c(j<1, j>length(phenoNames(x))))) stop('Error: subscript out of bounds')
         sel <- as.character(pData(x)$phenoName) == levels(pData(x)$phenoName)[j]
-      } else if (class(j)=="logical") {
+      } else if (is(j, "logical")) {
         if (length(j)!=length(phenoNames(x))) stop('Error: subscript out of bounds')
         sel <- pData(x)$phenoName %in% phenoNames(x)[j]
       }

@@ -1,6 +1,6 @@
 pca.2d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, main='', components= c(1, 2), legend=TRUE) {
   #control errors
-  stopifnot(class(x)=='ExpressionSet')
+  stopifnot(is(x, 'ExpressionSet'))
   if (!missing(group)) {
     stopifnot(group %in% colnames(pData(x)))
   }
@@ -13,7 +13,7 @@ pca.2d <- function(x, pc, pc.lab, group, group2, pair, names, ellipse=FALSE, mai
   if (!missing(names)) {
     stopifnot(names %in% colnames(pData(x)))
   }
-  stopifnot(class(components) %in% c('numeric', 'integer'))
+  stopifnot(is(components, 'numeric') | is(components, 'integer'))
   stopifnot(all(!is.na(components)))
 #
   colnames(pc) <- c('pc1', 'pc2')

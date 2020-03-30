@@ -12,7 +12,7 @@ getChrWithMedVar <- function(x) {
 
 getEsPositions <- function(epheno,phenoName,organism='human',logEs=T,center=FALSE) {
   #get gene pos from biomaRt
-  stopifnot(class(epheno) == 'epheno')
+  stopifnot(is(epheno, 'epheno'))
   stopifnot(phenoName %in% phenoNames(epheno))
   if (annotation(epheno) == 'entrezid') {
     stopifnot(organism %in% c('human','mouse','drosophila'))

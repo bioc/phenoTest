@@ -1,5 +1,5 @@
 eset2genelevel <- function(x) {
-  stopifnot(class(x)=='ExpressionSet')
+  stopifnot(is(x, 'ExpressionSet'))
   annolib <- paste(annotation(x),'.db',sep='')
   if (!(annolib %in% loadedNamespaces())) stop(paste(annolib,'has not been loaded!'))
   #

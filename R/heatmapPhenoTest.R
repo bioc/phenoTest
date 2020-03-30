@@ -1,6 +1,6 @@
 ClusterPhenoTest <- function(x,cluster,vars2test,B=10^4,p.adjust.method='none') {
   if (length(cluster) != ncol(x)) stop('Dimensions of cluster and x do not match')
-  if (class(cluster)=='character') cluster <- factor(cluster)
+  if (is(cluster, 'character')) cluster <- factor(cluster)
   if (!is.null(vars2test$continuous)) {
     if (sum(vars2test$continuous %in% names(pData(x))) != length(vars2test$continuous)) stop('Invalid variable names in vars2test$continuous')
   }
