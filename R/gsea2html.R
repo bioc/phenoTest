@@ -46,12 +46,13 @@ gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotE
   if (limit<nrow(gsets)) gsets <- gsets[1:limit,]
 
   #gene set annotation
-  if (gseaData$gsetOrigin=='KEGG') {
-    envir <- eval(parse(text='KEGGPATHID2NAME'))
-    gsetname <- gsub('hsa','',gsub('mmu','',gsets[,'geneSet']))
-    geneSetName <- unlist(AnnotationDbi::mget(gsetname,envir))
-    gsets <- data.frame(gsets[,1:2],geneSetName=geneSetName,gsets[,3:ncol(gsets)])
-  } else if (gseaData$gsetOrigin=='GO') {
+  #if (gseaData$gsetOrigin=='KEGG') {
+    #envir <- eval(parse(text='KEGGPATHID2NAME'))
+    #gsetname <- gsub('hsa','',gsub('mmu','',gsets[,'geneSet']))
+    #geneSetName <- unlist(AnnotationDbi::mget(gsetname,envir))
+    #gsets <- data.frame(gsets[,1:2],geneSetName=geneSetName,gsets[,3:ncol(gsets)])
+  #} else if (gseaData$gsetOrigin=='GO') {
+  if (gseaData$gsetOrigin=='GO') {
     geneSetName <- Term(as.character(gsets[,'geneSet']))
     gsets <- data.frame(gsets[,1:2],geneSetName=geneSetName,gsets[,3:ncol(gsets)])
   }
@@ -60,10 +61,11 @@ gsea2html <- function(gseaData,epheno,variable,title='',path,file,digits=3,plotE
   linksout <- tiny.pic <- vector('list',ncol(gsets))
   linksout[[2]] <- paste('gsets_',mylabel,'/gset_',1:nrow(gsets),'.html',sep='')
   link2plot <- paste('plots_',mylabel,'/gset_',1:nrow(gsets),'.png',sep='')
-  if (gseaData$gsetOrigin=='KEGG') {
-    linksout[[3]] <- paste('http://www.genome.jp/dbget-bin/www_bget?map',gsub('mmu','',as.character(gsets$geneSet)),sep='')
-    linksout[[4]] <- tiny.pic[[4]] <- link2plot
-  } else if (gseaData$gsetOrigin=='GO') {
+  #if (gseaData$gsetOrigin=='KEGG') {
+    #linksout[[3]] <- paste('http://www.genome.jp/dbget-bin/www_bget?map',gsub('mmu','',as.character(gsets$geneSet)),sep='')
+    #linksout[[4]] <- tiny.pic[[4]] <- link2plot
+  #} else if (gseaData$gsetOrigin=='GO') {
+  if (gseaData$gsetOrigin=='GO') {
     linksout[[3]] <- paste('http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=',as.character(gsets[,'geneSet']),sep='')
     linksout[[4]] <- tiny.pic[[4]] <- link2plot
   }

@@ -109,7 +109,7 @@ C.A. Tsai and J.J. Chen. \emph{Kernel estimation for adjusted p-values
 }
 \keyword{datasets}
 \seealso{
-gsea.go, gsea.kegg
+gsea.go
 }
 \examples{
 #load epheno object
